@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Robot Arm Load &amp; Link-Length Calculator — Live</title>
-<meta name="description" content="Interactive robot arm calculator: servo selection, payload limit, permissible link lengths, bending stress, motor torque and tip deflection with live scaled diagrams.">
+<meta name="description" content="Interactive robot arm calculator: servo selection, payload limit, permissible link lengths, bending stress, motor torque and tip deflection with live scaled diagrams and explanations for every field.">
 <style>
 :root{--bg:#0d1117;--p1:#161b22;--p2:#1c2330;--ln:#30363d;--tx:#e6edf3;--t2:#9aa7b4;
 --ac:#58a6ff;--ok:#3fb950;--wn:#d29922;--bd:#f85149;--vi:#8957e5;--mono:ui-monospace,SFMono-Regular,Consolas,monospace}
@@ -14,10 +14,11 @@ header{border-bottom:1px solid var(--ln);background:linear-gradient(180deg,#161b
 .hd{max-width:1480px;margin:0 auto;display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between}
 h1{font-size:1.2rem;margin:0}
 h1 small{display:block;font-weight:400;font-size:.76rem;color:var(--t2);margin-top:.15rem}
-.wrap{max-width:1480px;margin:0 auto;padding:1.25rem;display:grid;grid-template-columns:minmax(0,392px) minmax(0,1fr);gap:1.25rem;align-items:start}
+.wrap{max-width:1480px;margin:0 auto;padding:1.25rem;display:grid;grid-template-columns:minmax(0,400px) minmax(0,1fr);gap:1.25rem;align-items:start}
 .col-r{position:sticky;top:1rem}
 .panel{background:var(--p1);border:1px solid var(--ln);border-radius:10px;padding:.9rem 1rem;margin-bottom:1rem}
 .panel>h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;color:var(--t2);margin:0 0 .7rem;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.panel>h2 .r{display:flex;gap:.4rem;align-items:center}
 .hint{font-size:.74rem;color:var(--t2);margin:.5rem 0 0}
 /* buttons / modes */
 .btn{background:var(--p2);color:var(--tx);border:1px solid var(--ln);border-radius:7px;padding:.4rem .7rem;font-size:.8rem;cursor:pointer}
@@ -28,10 +29,30 @@ h1 small{display:block;font-weight:400;font-size:.76rem;color:var(--t2);margin-t
 .modes{display:flex;gap:.4rem;background:var(--p2);border:1px solid var(--ln);border-radius:8px;padding:.25rem}
 .modes button{flex:1;background:none;border:0;color:var(--t2);font-size:.8rem;padding:.4rem .6rem;border-radius:6px;cursor:pointer;white-space:nowrap}
 .modes button.on{background:#1f6feb33;color:var(--ac);box-shadow:inset 0 0 0 1px #1f6feb66}
+/* ===== info buttons & help boxes ===== */
+.ib{flex:0 0 auto;width:16px;height:16px;padding:0;border-radius:50%;border:1px solid var(--ln);
+ background:var(--p2);color:var(--t2);font:italic 700 10px/14px Georgia,"Times New Roman",serif;
+ cursor:pointer;text-align:center;vertical-align:middle;transition:.12s}
+.ib:hover{border-color:var(--ac);color:var(--ac);background:#1f6feb1a}
+.ib.on{background:#1f6feb33;border-color:var(--ac);color:var(--ac)}
+th .ib{margin-left:.3rem}
+.helpbox{position:relative;margin:.4rem 0 .2rem;background:#010409;border:1px solid #1f6feb44;
+ border-left:3px solid var(--ac);border-radius:7px;padding:.5rem 1.5rem .55rem .6rem;
+ font-size:.76rem;color:var(--t2);line-height:1.52;text-align:left;font-family:inherit;white-space:normal}
+.helpbox>b{display:block;color:var(--ac);font-size:.75rem;margin-bottom:.22rem}
+.helpbox code{font-family:var(--mono);font-size:.71rem;color:#7ee787;background:#161b22;padding:.05em .3em;border-radius:3px}
+.helpbox .hx{position:absolute;top:.28rem;right:.3rem;background:none;border:0;color:var(--t2);cursor:pointer;font-size:.74rem;line-height:1;padding:.1rem .2rem}
+.helpbox .hx:hover{color:var(--bd)}
+.helpdock{display:grid;gap:.4rem}
+.helpdock:empty{display:none}
+.fw{position:relative}
+.ckrow{display:flex;align-items:center;gap:.5rem}
+.ckrow label.ck{flex:1}
 /* fields */
 .g{display:grid;grid-template-columns:1fr;gap:.45rem}
 .nr{display:grid;grid-template-columns:1fr 92px;gap:.35rem .5rem;align-items:center}
-.nr>span{grid-column:1/-1;font-size:.76rem;color:var(--t2);display:flex;justify-content:space-between;gap:.5rem}
+.nr>span{grid-column:1/-1;font-size:.76rem;color:var(--t2);display:flex;align-items:center;gap:.45rem}
+.nr>span>.lb{flex:1}
 .nr>span em{font-style:normal;color:#6e7b8a}
 .nr.full{grid-template-columns:1fr}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:var(--ln);border-radius:4px;outline:none;margin:.3rem 0}
@@ -48,6 +69,7 @@ label.ck input{accent-color:var(--ac)}
 .lc{background:var(--p1);border:1px solid var(--ln);border-radius:10px;margin-bottom:.7rem;overflow:hidden}
 .lch{display:flex;align-items:center;justify-content:space-between;gap:.5rem;background:var(--p2);padding:.5rem .75rem;border-bottom:1px solid var(--ln)}
 .lch b{font-size:.85rem}.lch b small{color:var(--t2);font-weight:400}
+.lch .r{display:flex;align-items:center;gap:.45rem}
 .lcl{font-family:var(--mono);font-size:.78rem;color:var(--ac);text-align:right}
 .lcb{display:grid;grid-template-columns:minmax(0,1fr) 124px;gap:.75rem;padding:.75rem}
 .secbox{border:1px dashed var(--ln);border-radius:8px;padding:.3rem;text-align:center}
@@ -57,9 +79,9 @@ label.ck input{accent-color:var(--ac)}
 .spec b{color:var(--ac);font-weight:600}
 .sub{border-top:1px dashed var(--ln);margin:.3rem 0 .1rem;padding-top:.45rem}
 /* results */
-.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:.6rem}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.6rem}
 .kpi{background:var(--p2);border:1px solid var(--ln);border-radius:9px;padding:.6rem .7rem}
-.kpi span{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--t2)}
+.kpi>span{display:flex;align-items:center;justify-content:space-between;gap:.3rem;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--t2)}
 .kpi b{display:block;font-size:1.3rem;line-height:1.3;font-family:var(--mono)}
 .kpi i{font-style:normal;font-size:.72rem;color:var(--t2)}
 .kpi.hero{border-color:#1f6feb66;background:#1f6feb1a}
@@ -72,7 +94,7 @@ label.ck input{accent-color:var(--ac)}
 figure{margin:0;background:var(--p1);border:1px solid var(--ln);border-radius:10px;padding:.5rem}
 figure svg{display:block;width:100%;height:auto}
 figcaption{font-size:.74rem;color:var(--t2);text-align:center;padding:.35rem 0 .1rem}
-.legend{display:flex;flex-wrap:wrap;gap:.9rem;justify-content:center;font-size:.72rem;color:var(--t2);padding:.2rem 0 .35rem}
+.legend{display:flex;flex-wrap:wrap;gap:.9rem;justify-content:center;align-items:center;font-size:.72rem;color:var(--t2);padding:.2rem 0 .35rem}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:.3rem;vertical-align:-1px}
 .scroll{overflow-x:auto}
 table{border-collapse:collapse;width:100%;font-size:.78rem;min-width:620px}
@@ -105,6 +127,7 @@ footer div{max-width:1480px;margin:0 auto}
 <header><div class="hd">
   <h1>Robot Arm Load &amp; Link-Length Calculator<small>Live bending · torque · deflection model with servo database — fully offline</small></h1>
   <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+    <button class="btn sm prim" id="bHelp">ⓘ Show all info</button>
     <a class="btn sm prim page-link" href="armCalculationsWeb.html">📄 Build specification</a>
     <span style="width:1px;height:20px;background:var(--ln);margin:0 .15rem"></span>
     <button class="btn sm" id="bPreset1">Preset: MG996R mini</button>
@@ -118,28 +141,41 @@ footer div{max-width:1480px;margin:0 auto}
 <!-- ================= INPUTS ================= -->
 <div class="col-l">
   <div class="panel">
-    <h2>Mode</h2>
+    <h2><span>Mode</span><span class="r"><button type="button" class="ib" data-help="panel.mode" data-dock="#dockMode" title="What is this?">i</button></span></h2>
+    <div class="helpdock" id="dockMode"></div>
     <div class="modes">
       <button id="mLoad" class="on">① Find load limit</button>
       <button id="mLen">② Find link lengths</button>
     </div>
     <p id="modeHelp" class="hint"></p>
   </div>
-  <div class="panel"><h2>Global inputs</h2><div class="g" id="globals"></div></div>
+  <div class="panel">
+    <h2><span>Global inputs</span><span class="r"><button type="button" class="ib" data-help="panel.glob" data-dock="#dockGlob" title="What is this?">i</button></span></h2>
+    <div class="helpdock" id="dockGlob"></div>
+    <div class="g" id="globals"></div>
+  </div>
   <div class="panel" style="padding-bottom:.4rem">
-    <h2>Links &amp; joints <span class="chip" id="chipN"></span></h2>
+    <h2><span>Links &amp; joints</span><span class="r"><span class="chip" id="chipN"></span>
+      <button type="button" class="ib" data-help="panel.links" data-dock="#dockLinks" title="What is this?">i</button></span></h2>
+    <div class="helpdock" id="dockLinks"></div>
     <div id="links"></div>
     <p class="hint" style="padding-bottom:.5rem">The actuator chosen for joint J<sub>i+1</sub> is physically mounted at the <b>distal end of link i</b>, so its mass is added there automatically. The base actuator (J1) is carried by the base and does not load the structure.</p>
   </div>
   <div class="panel">
-    <h2>End effector <span class="chip" id="chipEE"></span></h2>
+    <h2><span>End effector</span><span class="r"><span class="chip" id="chipEE"></span>
+      <button type="button" class="ib" data-help="panel.ee" data-dock="#dockEE" title="What is this?">i</button></span></h2>
+    <div class="helpdock" id="dockEE"></div>
     <div class="g" id="ee"></div>
     <div class="spec" id="eeSpec" style="margin-top:.55rem"></div>
     <p class="hint">Total end-effector mass is applied as the distal lumped mass on the final link. The payload is separate — it is the object being gripped.</p>
   </div>
   <div class="panel">
-    <h2>Dynamics check (optional)</h2>
-    <label class="ck"><input type="checkbox" id="dynOn"> Include inertia torque (J·α)</label>
+    <h2><span>Dynamics check (optional)</span><span class="r"><button type="button" class="ib" data-help="panel.dyn" data-dock="#dockDyn" title="What is this?">i</button></span></h2>
+    <div class="helpdock" id="dockDyn"></div>
+    <div class="fw"><div class="ckrow">
+      <label class="ck"><input type="checkbox" id="dynOn"> Include inertia torque (J·α)</label>
+      <button type="button" class="ib" data-help="dyn.on" title="What is this?">i</button>
+    </div></div>
     <div class="g" id="dyn" style="margin-top:.55rem"></div>
     <p class="hint">Computed with K<sub>d</sub>=1 to avoid double-counting; compare against the static result.</p>
   </div>
@@ -153,18 +189,41 @@ footer div{max-width:1480px;margin:0 auto}
       <span><i style="background:#d29922"></i>0.6–0.9</span>
       <span><i style="background:#f85149"></i>&gt; 0.9</span>
       <span><i style="background:#30363d"></i>undeflected axis</span>
-      <span><i style="background:#8957e5"></i>deflection budget</span>
+      <span><i style="background:#8957e5"></i>component mass / budget</span>
       <span><i style="background:#58a6ff;border-radius:50%"></i>joint arc = rotation range</span>
+      <button type="button" class="ib" data-help="panel.diag" data-dock="#dockDiag" title="What is this?">i</button>
     </div>
+    <div class="helpdock" id="dockDiag"></div>
     <figcaption id="armCap"></figcaption>
   </figure>
-  <div class="panel"><h2>Results</h2><div class="kpis" id="kpis"></div>
-    <p id="verdict" style="margin:.75rem 0 0;font-size:.85rem"></p></div>
-  <div class="panel"><h2>Actuator schedule</h2><div class="scroll" id="actTbl"></div>
-    <p class="hint">Rated figures are indicative manufacturer <b>stall</b> (servo) or <b>holding</b> (stepper) torque. Available torque = rated × qty × derate × gear ratio × η.</p></div>
-  <div class="panel"><h2>Mass budget</h2><div class="scroll" id="mbTbl"></div></div>
-  <div class="panel"><h2>Per-joint breakdown</h2><div class="scroll" id="tbl"></div></div>
-  <div class="panel"><h2>Design advice</h2><ul class="adv" id="advice"></ul></div>
+  <div class="panel">
+    <h2><span>Results</span><span class="r"><button type="button" class="ib" data-help="panel.res" data-dock="#dockRes" title="What is this?">i</button></span></h2>
+    <div class="helpdock" id="dockRes"></div>
+    <div class="kpis" id="kpis"></div>
+    <p id="verdict" style="margin:.75rem 0 0;font-size:.85rem"></p>
+    <div class="helpdock" id="dockVerdict" style="margin-top:.4rem"></div>
+  </div>
+  <div class="panel">
+    <h2><span>Actuator schedule</span><span class="r"><button type="button" class="ib" data-help="panel.act" data-dock="#dockAct" title="What is this?">i</button></span></h2>
+    <div class="scroll" id="actTbl"></div>
+    <div class="helpdock" id="dockAct" style="margin-top:.5rem"></div>
+    <p class="hint">Rated figures are indicative manufacturer <b>stall</b> (servo) or <b>holding</b> (stepper) torque. Available torque = rated × qty × derate × gear ratio × η.</p>
+  </div>
+  <div class="panel">
+    <h2><span>Mass budget</span><span class="r"><button type="button" class="ib" data-help="panel.mb" data-dock="#dockMb" title="What is this?">i</button></span></h2>
+    <div class="scroll" id="mbTbl"></div>
+    <div class="helpdock" id="dockMb" style="margin-top:.5rem"></div>
+  </div>
+  <div class="panel">
+    <h2><span>Per-joint breakdown</span><span class="r"><button type="button" class="ib" data-help="panel.joint" data-dock="#dockJoint" title="What is this?">i</button></span></h2>
+    <div class="scroll" id="tbl"></div>
+    <div class="helpdock" id="dockJoint" style="margin-top:.5rem"></div>
+  </div>
+  <div class="panel">
+    <h2><span>Design advice</span><span class="r"><button type="button" class="ib" data-help="panel.adv" data-dock="#dockAdv" title="What is this?">i</button></span></h2>
+    <div class="helpdock" id="dockAdv"></div>
+    <ul class="adv" id="advice"></ul>
+  </div>
   <div class="panel"><details><summary>Formulas used (plain text)</summary>
 <pre id="formulas">SECTION      A, I about bending axis, c = extreme fibre, Z = I/c
 MASS         m_i = A_i * L_i * 1e-9 * rho_i                      [kg]
@@ -210,10 +269,7 @@ const HOLLOW=s=>s==='Hollow Rod'||s==='Square Tube'||s==='Rect Tube';
 const RECT=s=>s==='Rectangle'||s==='Rect Tube';
 const ROUND=s=>s==='Solid Rod'||s==='Hollow Rod';
 const KGCM=9.80665/100; /* kg.cm -> N.m */
-
-/* ============ ACTUATOR DATABASE ============
-   kgcm = stall torque (servo) at volts; nm computed. For steppers nm = holding torque.
-   mass in g, rot = usable rotation (deg), t60 = sec/60deg (servo), dps = no-load deg/s */
+/* ============ ACTUATOR DATABASE ============ */
 function sv(o){o.nm=o.nm!==undefined?o.nm:+(o.kgcm*KGCM).toFixed(4);
  o.dps=o.dps!==undefined?o.dps:(o.t60?+(60/o.t60).toFixed(0):0);return o;}
 const SERV={
@@ -247,6 +303,101 @@ const SGROUPS=[
  ['Other',['None','Custom']]
 ];
 const SK=k=>SERV[k]||SERV.None;
+
+/* ============ HELP CONTENT ============ */
+const HELP={
+/* --- panels --- */
+'panel.mode':['Two solving directions','<b>Mode ①</b> treats your link lengths as fixed and answers “how much can it lift?”. <b>Mode ②</b> treats the payload as fixed and answers “how long can the links be?” — it searches total reach until the worst constraint sits exactly at 1.00. Everything else (materials, sections, actuators) is an input in both modes.'],
+'panel.glob':['Global inputs','Values that apply to the whole arm: how many joints, the safety and derating assumptions, your accuracy target, and the payload. The four factors <code>FoS</code>, <code>k</code>, <code>K<sub>d</sub></code> and <code>derate</code> together decide how conservative every result is — they matter more than any single dimension.'],
+'panel.links':['Links &amp; joints','One card per link, numbered from the base outwards. Each card holds the actuator driving that joint, the link’s material and cross-section, and its length. Because the arm is a serial chain, <b>joint 1 carries everything</b> — mass added at the tip loads every joint below it.'],
+'panel.ee':['End effector','The gripper or tool bolted to the last link. Its total mass is applied as a lumped load at the very tip, which is the worst possible place for mass to sit. The <b>payload</b> is separate — that is the object being held.'],
+'panel.dyn':['Dynamics check','Static gravity torque is only half the story: accelerating the arm needs extra torque <code>T = J·α</code>, where J is the rotational inertia about the joint. Tick the box, set a target speed and acceleration time, and the per-joint table gains a dynamic torque column and headroom check.'],
+'panel.diag':['Reading the diagram','The arm is drawn in its <b>worst-case pose</b>: fully extended, horizontal, gravity straight down. Horizontal distance and section height are to scale; the droop is exaggerated so you can see it. Link colour shows the worst of bending/torque utilisation, purple squares are component masses at each joint, the dashed grey line is the undeflected axis, and the dashed purple line is your deflection budget.'],
+'panel.res':['Results','The headline numbers. In mode ① the hero figure is the payload you can actually use — the lesser of the strength/torque limit and the deflection limit. In mode ② it is the maximum reach, with the solved length of each link beside it.'],
+'panel.act':['Actuator schedule','Every joint’s actuator with its catalogue figures, what torque is actually available after derating and gearing, and what the arm demands of it. The last row is the gripper: its torque drives grip force, which this tool does not model.'],
+'panel.mb':['Mass budget','Where the arm’s mass lives. Structure is the printed or machined links; the actuator rows are motors and brackets carried <i>by</i> the arm. The base actuator is listed separately because it sits on the base and loads nothing. The final total is what you must mount and power.'],
+'panel.joint':['Per-joint breakdown','One row per joint showing how close it is to each of the three limits. The joint with the highest utilisation is your bottleneck — fix that one first, because improving any other joint changes nothing.'],
+'panel.adv':['Design advice','Automatically generated notes based on your current numbers. They name the binding joint, suggest the specific fix, and flag practical traps (servo duty cycles, PLA creep, power draw) that the equations alone will not warn you about.'],
+/* --- global inputs --- */
+'g.N':['Number of links / joints','How many powered joints the arm has, counted from the base. Link 1 is nearest the base and carries the most load. Cards beyond this number are hidden and excluded from every calculation.'],
+'g.payload':['Payload at the tip','The mass of the object you want to carry, <b>not</b> including the gripper. It acts at the tip plus the CoG offset, giving it the longest lever arm on the arm — which is why a small payload increase costs so much torque. Editable in mode ② only; in mode ① it is the computed answer.'],
+'g.derate':['Actuator torque derate','The fraction of the catalogue torque you allow yourself to use. Hobby servo kg·cm figures are <b>stall</b> torque: the rotor is locked, current is maximal and the motor is cooking. Use <b>0.4–0.5</b> for servos, <b>0.6–0.8</b> for stepper holding torque. This is the single most consequential number on the page.'],
+'g.fos':['Factor of safety','Divides the material’s yield strength to give the allowable stress. <b>2.5</b> for metal, <b>3–4</b> for printed parts where strength varies between prints. Covers material scatter, load uncertainty and the gap between a tidy model and a real joint.'],
+'g.k':['Print knockdown factor k','Multiplies datasheet strength to reflect what a printed part actually achieves: layer bonds, voids and infill. <b>0.55–0.7</b> is realistic for good FDM; use <b>1.0</b> for steel. Calibrate it by breaking a test coupon of your own printing.'],
+'g.kd':['Dynamic amplification K<sub>d</sub>','A blunt multiplier on all gravity loads to account for acceleration, jerk and shock. <b>1.3</b> for slow, smooth motion; <b>1.5–2.0</b> for fast start–stop or a payload that gets snatched. Use the dynamics panel below for a proper inertia calculation instead of guessing here.'],
+'g.eta':['Drivetrain efficiency η','The fraction of motor torque that reaches the joint after the transmission. Roughly <b>0.9</b> spur gears, <b>0.8</b> belt, <b>0.7</b> worm. Direct-drive servos are already geared internally, so their rating is at the output — leave η near 0.9 unless you add your own reduction.'],
+'g.dmax':['Max allowable tip deflection','Your accuracy budget: how far the tip may sag under load before the arm is useless for the task. <b>0.5–1 mm</b> for pick-and-place of small parts; several mm is fine for a camera arm. This single number usually decides the payload of a printed arm.'],
+'g.g':['Gravity','9.81 m/s² at sea level. Change it only for a deliberately different environment — it scales every load linearly.'],
+'g.exag':['Droop exaggeration','Display only — multiplies the drawn deflection so a sub-millimetre sag is visible on screen. It never affects the numbers. The caption always states the true droop.'],
+'g.omega':['Target joint speed ω','How fast you want the joint to slew, in degrees per second. 90 °/s is a brisk but sane desktop arm. Compare it with the no-load speed in the actuator schedule: a loaded servo reaches only 50–70% of its catalogue figure.'],
+'g.ta':['Acceleration time t<sub>a</sub>','How long the joint takes to reach ω from rest. Angular acceleration <code>α = ω / t<sub>a</sub></code>, and inertia torque is <code>J·α</code> — so halving this time doubles the extra torque demanded. Smoothing your motion profile is the cheapest way to fix a dynamics failure.'],
+'dyn.on':['Include inertia torque','When ticked, the per-joint table adds the torque needed to accelerate the arm, not just hold it up. Computed with K<sub>d</sub> = 1 so it does not double-count the blunt dynamic factor — treat it as an independent cross-check of the static result.'],
+/* --- end effector --- */
+'e.act':['Gripper / tool actuator','The servo that opens and closes the gripper. Its mass is carried at the tip, which is why a 9 g SG90 is often the right answer even when it is marginal on grip force. Its torque is <i>not</i> part of the arm’s joint capacity — grip force is a separate calculation this tool does not perform.'],
+'e.qty':['Number of gripper actuators','Multiplies both mass and torque. Two servos are common for an independent-jaw or wrist-plus-grip design.'],
+'e.struct':['Gripper structure mass','The printed body, jaws, pins and linkage of the gripper — everything except the servo and tooling. Weigh it if you have it; a typical printed two-finger gripper body is 30–80 g.'],
+'e.tool':['Extra tooling mass','Anything else bolted to the tip: camera, sensor, suction cup, magnet, LED ring, cabling. All of it acts at the worst possible lever arm, so it is worth weighing rather than estimating.'],
+'e.cg':['Payload CoG offset','How far the payload’s centre of gravity sits <i>beyond</i> the end-effector flange. The arm sees <code>reach + offset</code> as the lever arm, so an 80 mm offset on a 400 mm arm adds 20% to every joint moment. Gripping closer to the flange is usually the cheapest capacity gain available.'],
+/* --- link fields --- */
+'l.act':['Actuator at this joint','The motor driving this joint. Pick from the database and the panel below shows its torque, mass, rotation range and speed. Note the physical arrangement: this actuator’s <b>mass is applied to the previous link’s distal end</b>, because that is where it is bolted. The base actuator (J1) sits on the base and loads nothing.'],
+'l.qty':['Actuators at this joint','Two servos on a common output shaft double the torque and the mass. Mechanically fiddly — they fight each other unless the horns are trimmed to match — but it is a legitimate way to get past a torque limit without buying a bigger class.'],
+'l.tq':['Custom actuator rated torque','Only active when the actuator is set to <b>Custom</b>. Enter the rated output torque in N·m (divide kg·cm by 10.2). The global derate still applies on top of it.'],
+'l.gr':['External gear / belt ratio','Any reduction you add <i>outside</i> the actuator — belt, planetary or spur stage. Torque multiplies by the ratio, speed divides by it, and reflected inertia divides by the ratio squared. Steppers almost always need 5–30:1 here; servos usually run 1:1 because their gearbox is internal.'],
+'l.hw':['Bracket + fastener mass','The printed or machined bracket, bearings, pins, screws and heat-set inserts at this joint — everything except the actuator itself. Easy to underestimate; 15–30 g is typical for a servo-class joint. With a Custom actuator, put the whole actuator mass here.'],
+'l.mat':['Link material','Sets density, yield strength and stiffness (E). Stiffness is what usually matters: PLA is the stiffest common filament at ~3.5 GPa, PETG and ASA around 2 GPa, steel at 200 GPa — about 60× stiffer than any plastic here.'],
+'l.sec':['Cross-section','The link’s profile. Hollow sections remove material from near the neutral axis where it barely contributes, so a tube gives far more stiffness per gram than a solid bar. Selecting a solid type disables the wall thickness field; selecting a round type disables the separate height.'],
+'l.L':['Link length','Centre-to-centre distance to the next joint. Bending moment grows <b>linearly</b> with length but deflection grows with <b>L³</b> — so a 25% longer link droops almost twice as much. Editable in mode ①; in mode ② it is the solved output.'],
+'l.share':['Length share','Mode ② only. The <i>proportion</i> of total reach given to this link. The solver scales total reach up or down while keeping these proportions, so only the ratios between links matter — 2/1/0.5 behaves identically to 4/2/1.'],
+'l.d1':['Outside diameter / width','For round sections, the outside diameter. For square and rectangular sections, the width <b>b</b> — the horizontal dimension in the worst-case pose. Width contributes to bending stiffness only linearly, so it is the cheaper dimension to trim.'],
+'l.d2':['Height in the bending plane','The vertical dimension <b>h</b> when the arm is horizontal, used by rectangular sections only. This is the dimension that earns stiffness: <code>I = bh³/12</code>, so doubling h multiplies bending stiffness by eight. If one number is worth increasing, it is this one.'],
+'l.t':['Wall thickness','Wall thickness of a hollow section. Thin walls are efficient but must stay printable (≥ 2–3 perimeters, so ~1.6 mm+) and avoid local buckling. If the wall reaches half the section size the profile is effectively solid and the tool warns you.'],
+'l.auto':['Auto distal mass from components','When ticked, the mass at this link’s far end is assembled from your component choices: the next joint’s actuator(s) plus its bracket, or for the final link the whole end effector. The readout shows what was used. Untick to override with a single measured figure.'],
+'l.lump':['Manual distal lumped mass','A single mass applied at the far end of this link, used instead of the auto component total. Handy if you have weighed the real assembly, or want to model something the component fields do not cover. Only editable when auto is off.'],
+'l.sect':['Section properties','Computed from your dimensions. <b>I</b> (mm⁴) is the second moment of area — resistance to bending, driving deflection. <b>Z = I/c</b> (mm³) is the section modulus, driving peak stress via <code>σ = M/Z</code>. The last line is the link’s own mass from material density × volume.'],
+'l.hdr':['Link summary','Current length and the worst utilisation at this joint — the higher of bending and torque, where 1.00 means exactly at the allowable limit. Green is comfortable, amber is tight, red is over.'],
+/* --- KPIs --- */
+'k.payload':['Practical payload','What the arm can actually carry: the <b>lesser</b> of the strength/torque limit and the deflection limit shown beside it. This is the number to quote, because an arm that holds the load while sagging 5 mm has not done the job.'],
+'k.strength':['Strength / torque limit','The payload at which the first joint reaches either its allowable bending stress or its derated actuator torque. The caption names the joint and which of the two binds. Safety factors and the derate are already applied.'],
+'k.defl':['Deflection limit','The payload at which tip droop reaches your allowable budget, found by solving the beam equations backwards. On printed arms this is nearly always the smaller of the two limits — stiffness fails long before strength.'],
+'k.reach':['Max total reach','Mode ② result: the longest total arm, base to flange, that still satisfies every constraint with your stated payload. Individual link lengths follow from the shares you set.'],
+'k.maxL':['Max link length','The solved length of this link at the limiting total reach, following your length-share proportions. Change the share to redistribute reach between links without altering the total.'],
+'k.dtip':['Tip deflection','Total droop at the tip in the worst-case pose. It is not just one beam bending: each link’s own sag plus the <i>slope</i> it hands to everything outboard, which is why droop compounds down a long chain. Compared against your budget and colour-coded.'],
+'k.mass':['Arm mass (loaded)','Link structure plus every mass the arm carries — joint actuators, brackets and the end effector — but not the base actuator. The ratio beneath is payload ÷ arm mass; below about 0.15:1 most of your torque is just lifting the robot.'],
+'k.util':['Worst utilisation','The single highest of all bending, torque and deflection utilisations across the arm. <b>1.00 means exactly at the limit.</b> Mode ② solves reach until this equals 1.00; in mode ① anything under 0.9 is comfortable.'],
+'k.fn':['Lowest natural frequency','First bending mode of the weakest link, treated as a cantilever. A floppy arm oscillates rather than breaks: keep commanded motion below roughly one-fifth of this frequency or you will fight ringing forever in control tuning.'],
+'k.verdict':['Verdict','Names the governing constraint and the joint where it bites. Fixing anything else changes nothing until this one is addressed — which is the whole point of tracking utilisation per joint.'],
+/* --- actuator table --- */
+'a.joint':['Joint','Joints numbered from the base. The final row is the end effector, which does not carry the arm.'],
+'a.name':['Actuator','The selected part. Figures come from the built-in database of indicative values for the common clone of each class — always confirm against the datasheet of the unit you actually buy.'],
+'a.qty':['Quantity','Actuators ganged on this joint’s output. Multiplies both torque and mass.'],
+'a.ratio':['Gear ratio','External reduction you have added. Torque multiplies, speed divides.'],
+'a.kgcm':['Rated torque (kg·cm)','The hobby-servo convention: the torque at a 1 cm radius expressed as an equivalent mass. It is a <b>stall</b> figure. Convert with <code>N·m = kg·cm × 0.0981</code>.'],
+'a.nm':['Rated torque (N·m)','The same rating in SI units, per actuator, before quantity, derate, gearing or efficiency are applied.'],
+'a.avail':['Available torque','What the joint can genuinely deliver: <code>rated × qty × derate × ratio × η</code>. This is the number compared against demand, and it is deliberately well below the catalogue figure.'],
+'a.demand':['Demand torque','What gravity asks of this joint in the worst-case pose, including the dynamic factor K<sub>d</sub>: payload at its full lever arm plus every distal link, actuator and bracket at theirs.'],
+'a.util':['Torque utilisation','Demand ÷ available. Over 1.00 the joint cannot hold the pose. Above about 0.8 on a servo, expect buzzing, heat and position drift well before any mechanical failure.'],
+'a.mass':['Unit mass','Mass of one actuator. Remember it is carried by the link <i>below</i> this joint, so a heavy distal motor is penalised by every joint inboard of it.'],
+'a.range':['Rotation range','Usable travel of the output shaft. Most hobby servos give 180°, some high-torque units 270°; steppers and some bus servos are continuous. This directly limits your reachable workspace, so check it against the poses you need.'],
+'a.dps':['No-load speed','Catalogue speed with nothing attached, derived from the sec/60° figure. Under real load expect <b>50–70%</b> of this. Compare with your target ω in the dynamics panel.'],
+/* --- mass budget --- */
+'m.item':['Item','Each contribution to system mass, separated so you can see what to attack. Distal mass is always the most expensive — it loads every joint beneath it and adds inertia by distance squared.'],
+'m.g':['Mass in grams','Convenient for comparing against component datasheets and kitchen-scale measurements.'],
+'m.kg':['Mass in kilograms','The unit used internally by every calculation on this page.'],
+'m.note':['Note','Where the mass sits and whether it loads the arm structure. The base actuator is excluded from arm loading because the base carries it directly.'],
+/* --- joint table --- */
+'j.joint':['Joint','Numbered from the base outwards. Joint 1 carries the whole arm and is usually the bottleneck.'],
+'j.bend':['Bending utilisation','Applied moment ÷ allowable moment of the link cross-section, where allowable already includes FoS and the print knockdown. Over 1.00 the link is predicted to yield.'],
+'j.torque':['Torque utilisation','Applied moment ÷ derated actuator capacity. Over 1.00 the joint cannot hold the pose, and a servo in that state is stalled — drawing maximum current and heating fast.'],
+'j.demand':['Demand moment','Worst-case moment at this joint: <code>K<sub>d</sub>·g·(payload × lever arm + all distal masses × their arms)</code>. Shown in N·m for comparison with motor ratings.'],
+'j.bendcap':['Bending capacity','<code>Z × yield × k ÷ FoS</code> — what the cross-section can take. Increase it with section height, a tube profile, or a stiffer material.'],
+'j.actcap':['Actuator capacity','<code>rated × qty × derate × ratio × η</code> — what the motor can deliver. Increase it with gearing, a bigger class, or doubling up.'],
+'j.payload':['Payload limit from this joint','The payload at which <i>this</i> joint alone reaches its governing capacity. The arm’s limit is the smallest value in this column; every other joint has slack.'],
+'j.defl':['Local deflection','This link’s own sag, from its tip load, the moment handed back by the outboard chain, and its own distributed weight. Total tip droop adds every link’s sag plus the slope each one contributes.'],
+'j.fn':['Natural frequency','First cantilever bending mode of this link. Low values mean visible wobble and difficult control tuning, regardless of how strong the link is.'],
+'j.treq':['Dynamic torque required','Gravity torque plus inertia torque <code>J·α</code> for your chosen speed and acceleration time. Red means it exceeds what the actuator can deliver.'],
+'j.head':['Dynamic headroom','Available torque minus dynamic demand. Negative means the joint cannot achieve the commanded motion — lengthen the acceleration time or lower the target speed.'],
+'j.bind':['Binding constraint','Which limit is lower at this joint: the structure (<b>bending</b>) or the motor (<b>actuator</b>). It tells you whether to spend money on filament and geometry or on a better motor.']
+};
 
 /* ============ STATE ============ */
 const L_=o=>Object.assign({L:150,share:1,mat:'PETG',sec:'Rect Tube',d1:20,d2:30,t:2.5,
@@ -284,12 +435,12 @@ const PRESETS={
    L_({L:160,share:0.5,mat:'Steel',sec:'Hollow Rod', d1:20,d2:20,t:2,act:'NEMA17-P',qty:1,hw:50, gr:15})]}
 };
 let S=defaults();
+const OPEN=new Set();
 
 /* ============ COMPONENT MASS INTEGRATION ============ */
-const actUnit=k=>SK(k).mass/1000;                                  /* kg per unit */
 function actMass(i){const o=S.links[i],s=SK(o.act);
  const n=(s.type==='none'||s.type==='custom')?0:Math.max(1,+o.qty||1);
- return s.mass*n/1000+(+o.hw||0)/1000;}                            /* actuator(s) + bracket, kg */
+ return s.mass*n/1000+(+o.hw||0)/1000;}
 function eeMass(){const e=S.ee,s=SK(e.act);
  const n=(s.type==='none'||s.type==='custom')?0:Math.max(1,+e.qty||1);
  return s.mass*n/1000+(+e.struct||0)/1000+(+e.tool||0)/1000;}
@@ -414,16 +565,24 @@ const $=s=>document.querySelector(s);
 const fmt=(v,d=2)=>!isFinite(v)?'—':(Math.abs(v)>=1000?v.toFixed(0):v.toFixed(d));
 const uc=u=>u>0.9?'v-bd':u>0.6?'v-wn':'v-ok';
 const ucol=u=>u>0.9?'#f85149':u>0.6?'#d29922':'#3fb950';
+function ic(key,hid,dock){
+ return `<button type="button" class="ib" data-help="${key}"`
+  +((hid&&hid!==key)?` data-hid="${hid}"`:'')
+  +(dock?` data-dock="${dock}"`:'')
+  +` aria-expanded="false" title="What is this?">i</button>`;
+}
 function nrow(scope,i,k,label,unit,min,max,step){
  const v=scope==='g'?S[k]:(scope==='e'?S.ee[k]:S.links[i][k]);
  const at=scope==='g'?`data-g="${k}"`:(scope==='e'?`data-e="${k}"`:`data-i="${i}" data-k="${k}"`);
- return `<label class="nr"><span>${label}<em>${unit}</em></span>
+ const hk=(scope==='g'?'g.':scope==='e'?'e.':'l.')+k;
+ const hid=scope==='l'?hk+'#'+i:hk;
+ return `<div class="fw"><label class="nr"><span><span class="lb">${label}</span><em>${unit}</em>${ic(hk,hid)}</span>
  <input type="range" ${at} min="${min}" max="${max}" step="${step}" value="${v}">
- <input type="number" ${at} min="${min}" max="${max}" step="${step}" value="${v}"></label>`;
+ <input type="number" ${at} min="${min}" max="${max}" step="${step}" value="${v}"></label></div>`;
 }
 function selrow(i,k,label,opts){
- return `<label class="nr full"><span>${label}</span>
- <select data-i="${i}" data-k="${k}">${opts.map(o=>`<option${S.links[i][k]===o?' selected':''}>${o}</option>`).join('')}</select></label>`;
+ return `<div class="fw"><label class="nr full"><span><span class="lb">${label}</span>${ic('l.'+k,'l.'+k+'#'+i)}</span>
+ <select data-i="${i}" data-k="${k}">${opts.map(o=>`<option${S.links[i][k]===o?' selected':''}>${o}</option>`).join('')}</select></label></div>`;
 }
 function actOptions(cur){
  return SGROUPS.map(([g,ks])=>`<optgroup label="${g}">`+ks.map(k=>
@@ -442,8 +601,8 @@ function specBox(k,qty,extraG,extraLbl){
 }
 function buildGlobals(){
  $('#globals').innerHTML=
-  `<label class="nr full"><span>Number of links / joints</span>
-   <select data-g="N">${[1,2,3,4,5,6].map(n=>`<option value="${n}"${S.N===n?' selected':''}>${n}</option>`).join('')}</select></label>`
+  `<div class="fw"><label class="nr full"><span><span class="lb">Number of links / joints</span>${ic('g.N')}</span>
+   <select data-g="N">${[1,2,3,4,5,6].map(n=>`<option value="${n}"${S.N===n?' selected':''}>${n}</option>`).join('')}</select></label></div>`
  +nrow('g',0,'payload','Payload at tip <b>(input in mode ②)</b>','kg',0,20,0.05)
  +nrow('g',0,'derate','Actuator torque derate vs rated','–',0.2,1,0.05)
  +nrow('g',0,'fos','Factor of safety','–',1,6,0.1)
@@ -452,8 +611,8 @@ function buildGlobals(){
  +nrow('g',0,'eta','Drivetrain efficiency η','–',0.5,1,0.05)
  +nrow('g',0,'dmax','Max allowable tip deflection','mm',0.1,25,0.1)
  +nrow('g',0,'g','Gravity g','m/s²',9,10,0.01)
- +`<label class="nr full"><span>Droop exaggeration in diagram</span>
-   <select data-g="exag">${[1,5,10,25,50,100].map(n=>`<option value="${n}"${S.exag===n?' selected':''}>×${n}</option>`).join('')}</select></label>`
+ +`<div class="fw"><label class="nr full"><span><span class="lb">Droop exaggeration in diagram</span>${ic('g.exag')}</span>
+   <select data-g="exag">${[1,5,10,25,50,100].map(n=>`<option value="${n}"${S.exag===n?' selected':''}>×${n}</option>`).join('')}</select></label></div>`
  +`<p class="hint"><b>Derate</b> is the fraction of the rated figure you are willing to use: 0.4–0.5 for hobby servo <i>stall</i> torque, 0.6–0.8 for stepper <i>holding</i> torque.</p>`;
  $('#dyn').innerHTML=nrow('g',0,'omega','Target joint speed ω','°/s',10,360,10)
   +nrow('g',0,'ta','Acceleration time t<sub>a</sub>','s',0.05,2,0.05);
@@ -461,8 +620,8 @@ function buildGlobals(){
 }
 function buildEE(){
  $('#ee').innerHTML=
-  `<label class="nr full"><span>Gripper / tool actuator</span>
-   <select data-e="act">${actOptions(S.ee.act)}</select></label>`
+  `<div class="fw"><label class="nr full"><span><span class="lb">Gripper / tool actuator</span>${ic('e.act')}</span>
+   <select data-e="act">${actOptions(S.ee.act)}</select></label></div>`
  +nrow('e',0,'qty','Number of actuators','×',1,4,1)
  +nrow('e',0,'struct','Gripper structure mass (printed body, jaws, linkage)','g',0,600,5)
  +nrow('e',0,'tool','Extra tooling mass (camera, sensor, suction, magnet)','g',0,1000,5)
@@ -474,10 +633,11 @@ function buildLinks(){
   const o=S.links[i],s=SK(o.act),cust=s.type==='custom';
   const hwLbl=cust?'Actuator + bracket mass':'Bracket + fastener mass';
   h+=`<div class="lc" id="card${i}">
-   <div class="lch"><b>Link ${i+1}<small>${i===0?' · base':''}</small></b><span class="lcl" id="len${i}"></span></div>
+   <div class="lch"><b>Link ${i+1}<small>${i===0?' · base':''}</small></b>
+     <span class="r"><span class="lcl" id="len${i}"></span>${ic('l.hdr','l.hdr#'+i,'#dockL'+i)}</span></div>
    <div class="lcb"><div class="g">
-    <label class="nr full"><span>Actuator at joint J${i+1}</span>
-     <select data-i="${i}" data-k="act">${actOptions(o.act)}</select></label>
+    <div class="fw"><label class="nr full"><span><span class="lb">Actuator at joint J${i+1}</span>${ic('l.act','l.act#'+i)}</span>
+     <select data-i="${i}" data-k="act">${actOptions(o.act)}</select></label></div>
     ${nrow('l',i,'qty','Actuators at this joint','×',1,4,1)}
     ${nrow('l',i,'tq','Custom actuator rated torque','N·m',0.02,30,0.02)}
     ${nrow('l',i,'gr','External gear / belt ratio','：1',1,120,1)}
@@ -492,15 +652,53 @@ function buildLinks(){
     ${nrow('l',i,'d2','Height h (bending plane)','mm',4,140,1)}
     ${nrow('l',i,'t','Wall thickness t','mm',0,25,0.5)}
     <div class="sub"></div>
-    <label class="ck"><input type="checkbox" data-i="${i}" data-k="auto"${o.auto?' checked':''}>
-      Auto distal mass from components <span id="lauto${i}" style="margin-left:auto;font-family:var(--mono);color:var(--ac)"></span></label>
+    <div class="fw"><div class="ckrow">
+      <label class="ck"><input type="checkbox" data-i="${i}" data-k="auto"${o.auto?' checked':''}>
+        Auto distal mass from components <span id="lauto${i}" style="margin-left:auto;font-family:var(--mono);color:var(--ac)"></span></label>
+      ${ic('l.auto','l.auto#'+i)}
+    </div></div>
     ${nrow('l',i,'lump','Manual distal lumped mass','kg',0,8,0.01)}
    </div>
-   <div class="secbox"><svg id="sec${i}" viewBox="0 0 110 86"></svg><div id="cap${i}"></div></div>
-   </div></div>`;
+   <div class="secbox"><svg id="sec${i}" viewBox="0 0 110 86"></svg><div id="cap${i}"></div>
+     <div style="margin-top:.25rem">${ic('l.sect','l.sect#'+i,'#dockL'+i)}</div></div>
+   </div>
+   <div class="helpdock" id="dockL${i}" style="padding:0 .75rem .6rem"></div></div>`;
  }
  $('#links').innerHTML=h;
 }
+
+/* ============ HELP ENGINE ============ */
+function mountHelp(btn,hid){
+ const H=HELP[btn.dataset.help]||['Help','No description available for this field yet.'];
+ const box=document.createElement('div');
+ box.className='helpbox';
+ box.innerHTML=`<button type="button" class="hx" data-close="${hid}" aria-label="Close">✕</button>`
+  +`<b>${H[0]}</b><div>${H[1]}</div>`;
+ if(btn.dataset.dock){const d=document.querySelector(btn.dataset.dock);if(d)d.appendChild(box);return;}
+ const host=btn.closest('.fw')||btn.closest('.kpi')||btn.closest('.secbox')||btn.closest('.panel');
+ if(host)host.appendChild(box);
+}
+function restoreHelp(){
+ document.querySelectorAll('.helpbox').forEach(e=>e.remove());
+ document.querySelectorAll('.helpdock').forEach(d=>{d.innerHTML='';});
+ document.querySelectorAll('[data-help]').forEach(b=>{
+  const hid=b.dataset.hid||b.dataset.help,on=OPEN.has(hid);
+  b.classList.toggle('on',on);
+  b.setAttribute('aria-expanded',on?'true':'false');
+  if(on)mountHelp(b,hid);
+ });
+ const hb=$('#bHelp');if(hb)hb.textContent=OPEN.size?'ⓘ Hide all info ('+OPEN.size+')':'ⓘ Show all info';
+}
+document.addEventListener('click',e=>{
+ if(!(e.target instanceof Element))return;
+ const b=e.target.closest('[data-help]');
+ if(b){e.preventDefault();e.stopPropagation();
+  const hid=b.dataset.hid||b.dataset.help;
+  OPEN.has(hid)?OPEN.delete(hid):OPEN.add(hid);
+  restoreHelp();return;}
+ const c=e.target.closest('[data-close]');
+ if(c){e.preventDefault();OPEN.delete(c.dataset.close);restoreHelp();}
+});
 
 /* ============ DRAWING ============ */
 function drawSections(M){
@@ -572,13 +770,11 @@ function drawArm(M,P,def,u){
       <text x="${jx[i]}" y="${jy[i]+r+16}" text-anchor="middle" class="lbl">J${i+1}</text>
       <text x="${jx[i]}" y="${jy[i]+r+27}" text-anchor="middle" class="sml">${o.act==='Custom'?'custom':o.act}${(SK(o.act).type!=='none'&&SK(o.act).type!=='custom'&&o.qty>1)?'×'+o.qty:''}${o.gr>1?' '+o.gr+':1':''}</text>`;
  }
- /* end effector: body + jaws */
  const em=eeMass(),ez=Math.min(26,11+Math.cbrt(Math.max(.01,em))*17);
  g+=`<rect x="${x}" y="${y-ez/2}" width="${ez*0.75}" height="${ez}" rx="3" fill="#8957e533" stroke="#8957e5" stroke-width="1.8"/>
   <path d="M${x+ez*0.75},${y-ez/2} L${x+ez*1.5},${y-ez*0.62} L${x+ez*1.5},${y-ez*0.3} L${x+ez*0.75},${y-ez*0.14} Z" fill="#8957e533" stroke="#8957e5" stroke-width="1.5"/>
   <path d="M${x+ez*0.75},${y+ez/2} L${x+ez*1.5},${y+ez*0.62} L${x+ez*1.5},${y+ez*0.3} L${x+ez*0.75},${y+ez*0.14} Z" fill="#8957e533" stroke="#8957e5" stroke-width="1.5"/>
   <text x="${x+ez*0.6}" y="${y-ez/2-7}" text-anchor="middle" class="sml" fill="#8957e5">EE ${fmt(em*1000,0)} g</text>`;
- /* payload at cg offset */
  const px=x+cg*sc,pz=Math.min(32,10+Math.cbrt(Math.max(.01,P))*16);
  g+=`<rect x="${px}" y="${y-pz/2}" width="${pz*1.25}" height="${pz}" rx="4" fill="#1f6feb33" stroke="#58a6ff" stroke-width="2"/>
   <text x="${px+pz*0.62}" y="${y+pz/2+15}" text-anchor="middle" class="lbl">${fmt(P,2)} kg</text>`;
@@ -612,7 +808,6 @@ function update(){
  const P=S.mode==='load'?Math.min(sp.p,dp):S.payload;
  const u=utilArr(M,P),def=deflection(M,P),dyn=S.dyn?dynamics(M,P):null;
  const wu=worstUtil(M,P);
-
  /* card headers, spec boxes, visibility */
  $('#chipN').textContent=S.N+(S.N===1?' link':' links');
  $('#chipEE').textContent=fmt(eeMass()*1000,0)+' g';
@@ -631,7 +826,6 @@ function update(){
  }
  $('#eeSpec').outerHTML=specBox(S.ee.act,S.ee.qty,(+S.ee.struct||0)+(+S.ee.tool||0),'structure + tooling')
   .replace('class="spec"','class="spec" id="eeSpec" style="margin-top:.55rem"');
-
  /* enable / disable */
  document.querySelectorAll('[data-k="L"]').forEach(e=>e.disabled=S.mode!=='load');
  document.querySelectorAll('[data-k="share"]').forEach(e=>e.disabled=S.mode!=='lengths');
@@ -639,31 +833,29 @@ function update(){
  for(let i=0;i<S.N;i++){
   const o=S.links[i],s=SK(o.act),isR=RECT(o.sec),isH=HOLLOW(o.sec);
   const q=s.type!=='none'&&s.type!=='custom';
-  const dis=(k,v)=>document.querySelectorAll(`[data-i="${i}"][data-k="${k}"]`).forEach(e=>e.disabled=v);
+  const dis=(k,v)=>document.querySelectorAll(`[data-i="${i}"][data-k="${k}"]`).forEach(e=>{if(e.tagName==='INPUT'||e.tagName==='SELECT')e.disabled=v;});
   dis('d2',!isR);dis('t',!isH);dis('qty',!q);dis('tq',s.type!=='custom');
   dis('lump',o.auto);dis('gr',s.type==='none');
  }
  {const q=SK(S.ee.act).type!=='none'&&SK(S.ee.act).type!=='custom';
-  document.querySelectorAll('[data-e="qty"]').forEach(e=>e.disabled=!q);}
+  document.querySelectorAll('[data-e="qty"]').forEach(e=>{if(e.tagName==='INPUT')e.disabled=!q;});}
  if(S.mode==='lengths')document.querySelectorAll('[data-k="L"]').forEach(e=>{
   const i=+e.dataset.i;if(i<S.N)e.value=Math.round(M.L[i]);});
-
  /* KPIs */
  let kp='';
  if(S.mode==='load'){
-  kp+=`<div class="kpi hero"><span>Practical payload</span><b>${fmt(P,2)} kg</b><i>lesser of the two below</i></div>
-   <div class="kpi"><span>Strength / torque limit</span><b class="${dp<sp.p?'':'v-wn'}">${fmt(sp.p,2)} kg</b><i>joint J${sp.idx+1} · ${M.V[sp.idx]<M.W[sp.idx]?'bending':'actuator torque'}</i></div>
-   <div class="kpi"><span>Deflection limit</span><b class="${dp<sp.p?'v-wn':''}">${fmt(dp,2)} kg</b><i>at δ ≤ ${fmt(S.dmax,2)} mm</i></div>`;
+  kp+=`<div class="kpi hero"><span>Practical payload${ic('k.payload')}</span><b>${fmt(P,2)} kg</b><i>lesser of the two below</i></div>
+   <div class="kpi"><span>Strength / torque limit${ic('k.strength')}</span><b class="${dp<sp.p?'':'v-wn'}">${fmt(sp.p,2)} kg</b><i>joint J${sp.idx+1} · ${M.V[sp.idx]<M.W[sp.idx]?'bending':'actuator torque'}</i></div>
+   <div class="kpi"><span>Deflection limit${ic('k.defl')}</span><b class="${dp<sp.p?'v-wn':''}">${fmt(dp,2)} kg</b><i>at δ ≤ ${fmt(S.dmax,2)} mm</i></div>`;
  }else{
-  kp+=`<div class="kpi hero"><span>Max total reach</span><b>${solved&&solved.R!==null?fmt(M.reach[0],0)+' mm':'—'}</b><i>for ${fmt(S.payload,2)} kg payload</i></div>`;
-  for(let i=0;i<S.N;i++)kp+=`<div class="kpi"><span>Max L${i+1}</span><b>${fmt(M.L[i],0)}<i> mm</i></b><i>share ${fmt(S.links[i].share,2)}</i></div>`;
+  kp+=`<div class="kpi hero"><span>Max total reach${ic('k.reach')}</span><b>${solved&&solved.R!==null?fmt(M.reach[0],0)+' mm':'—'}</b><i>for ${fmt(S.payload,2)} kg payload</i></div>`;
+  for(let i=0;i<S.N;i++)kp+=`<div class="kpi"><span>Max L${i+1}${ic('k.maxL','k.maxL#'+i)}</span><b>${fmt(M.L[i],0)}<i> mm</i></b><i>share ${fmt(S.links[i].share,2)}</i></div>`;
  }
- kp+=`<div class="kpi"><span>Tip deflection</span><b class="${def.dtip>S.dmax?'v-bd':def.dtip>0.7*S.dmax?'v-wn':'v-ok'}">${fmt(def.dtip,2)}<i> mm</i></b><i>budget ${fmt(S.dmax,2)} mm</i></div>
-  <div class="kpi"><span>Arm mass (loaded)</span><b>${fmt(M.mass,2)}<i> kg</i></b><i>ratio ${fmt(P/Math.max(1e-9,M.mass),2)}:1</i></div>
-  <div class="kpi"><span>Worst utilisation</span><b class="${uc(wu)}">${fmt(wu,2)}</b><i>1.00 = at the limit</i></div>
-  <div class="kpi"><span>Lowest natural freq.</span><b>${fmt(Math.min(...Array.from({length:S.N},(_,i)=>fn(M,i))),1)}<i> Hz</i></b><i>per-link estimate</i></div>`;
+ kp+=`<div class="kpi"><span>Tip deflection${ic('k.dtip')}</span><b class="${def.dtip>S.dmax?'v-bd':def.dtip>0.7*S.dmax?'v-wn':'v-ok'}">${fmt(def.dtip,2)}<i> mm</i></b><i>budget ${fmt(S.dmax,2)} mm</i></div>
+  <div class="kpi"><span>Arm mass (loaded)${ic('k.mass')}</span><b>${fmt(M.mass,2)}<i> kg</i></b><i>ratio ${fmt(P/Math.max(1e-9,M.mass),2)}:1</i></div>
+  <div class="kpi"><span>Worst utilisation${ic('k.util')}</span><b class="${uc(wu)}">${fmt(wu,2)}</b><i>1.00 = at the limit</i></div>
+  <div class="kpi"><span>Lowest natural freq.${ic('k.fn')}</span><b>${fmt(Math.min(...Array.from({length:S.N},(_,i)=>fn(M,i))),1)}<i> Hz</i></b><i>per-link estimate</i></div>`;
  $('#kpis').innerHTML=kp;
-
  /* verdict */
  let v='',bindJ=0,bindMode='';
  {let worst=-1;for(let i=0;i<S.N;i++){const mx=Math.max(u[i].us,u[i].ut);if(mx>worst){worst=mx;bindJ=i;}}
@@ -673,12 +865,15 @@ function update(){
  else if(note==='capped')v=`<span class="chip wn">Reach capped</span> No constraint binds below 30 m of reach — check the actuator torque and section inputs.`;
  else v=`<span class="chip ${wu>1.001?'bd':wu>0.9?'wn':'ok'}">${wu>1.001?'Over limit':'Within limits'}</span>
   Governing constraint: <b>${bindMode}</b> at joint <b>J${bindJ+1}</b> (${S.links[bindJ].act}). ${def.dtip>S.dmax?`<span class="v-bd">Deflection exceeds budget — stiffen or shorten.</span>`:''}`;
- $('#verdict').innerHTML=v;
-
+ $('#verdict').innerHTML=v+' '+ic('k.verdict',null,'#dockVerdict');
  /* actuator schedule */
- let at=`<table><thead><tr><th>Joint</th><th>Actuator</th><th>Qty</th><th>Ratio</th>
-  <th>Rated<br>kg·cm</th><th>Rated<br>N·m</th><th>Available<br>N·m</th><th>Demand<br>N·m</th>
-  <th>Torque util</th><th>Unit mass<br>g</th><th>Range<br>°</th><th>No-load<br>°/s</th></tr></thead><tbody>`;
+ const D='#dockAct';
+ let at=`<table><thead><tr><th>Joint${ic('a.joint',null,D)}</th><th>Actuator${ic('a.name',null,D)}</th>
+  <th>Qty${ic('a.qty',null,D)}</th><th>Ratio${ic('a.ratio',null,D)}</th>
+  <th>Rated<br>kg·cm${ic('a.kgcm',null,D)}</th><th>Rated<br>N·m${ic('a.nm',null,D)}</th>
+  <th>Available<br>N·m${ic('a.avail',null,D)}</th><th>Demand<br>N·m${ic('a.demand',null,D)}</th>
+  <th>Torque util${ic('a.util',null,D)}</th><th>Unit mass<br>g${ic('a.mass',null,D)}</th>
+  <th>Range<br>°${ic('a.range',null,D)}</th><th>No-load<br>°/s${ic('a.dps',null,D)}</th></tr></thead><tbody>`;
  for(let i=0;i<S.N;i++){
   const o=S.links[i],s=SK(o.act),q=(s.type==='none'||s.type==='custom')?1:Math.max(1,+o.qty||1);
   const bar=x=>`<div class="bar"><i style="width:${Math.min(100,x*100)}%;background:${ucol(x)}"></i><span>${fmt(x,2)}</span></div>`;
@@ -696,14 +891,13 @@ function update(){
    <td class="lbl">not modelled</td><td>${fmt(s.mass,1)}</td>
    <td>${s.rot?(s.rot>=360?'cont.':s.rot):'—'}</td><td>${s.dps?s.dps:'—'}</td></tr>`;}
  $('#actTbl').innerHTML=at+'</tbody></table>';
-
  /* mass budget */
  const baseAct=actMass(0),manual=[];
  let autoLumps=0;for(let i=0;i<S.N;i++){if(S.links[i].auto)autoLumps+=M.lump[i];else manual.push(i+1);}
- const manMass=M.lsum-autoLumps,eeM=eeMass();
- let actSum=0;for(let i=1;i<S.N;i++)if(S.links[i].auto||true)actSum+=actMass(i);
+ const manMass=M.lsum-autoLumps,eeM=eeMass(),DM='#dockMb';
  const row=(a,b,c)=>`<tr><td>${a}</td><td>${fmt(b*1000,0)}</td><td>${fmt(b,3)}</td><td class="nm">${c}</td></tr>`;
- let mb=`<table class="mb"><thead><tr><th>Item</th><th>g</th><th>kg</th><th>Note</th></tr></thead><tbody>`;
+ let mb=`<table class="mb"><thead><tr><th>Item${ic('m.item',null,DM)}</th><th>g${ic('m.g',null,DM)}</th>
+  <th>kg${ic('m.kg',null,DM)}</th><th>Note${ic('m.note',null,DM)}</th></tr></thead><tbody>`;
  mb+=row('Link structure (printed / machined)',M.struct,`${S.N} links`);
  mb+=row('Joint actuators + brackets (J2…J'+S.N+')',Math.max(0,M.lsum-(S.links[S.N-1].auto?eeM:0)-manMass),'carried by the arm');
  if(S.links[S.N-1].auto)mb+=row('End effector (servo + structure + tooling)',eeM,'distal lump on link '+S.N);
@@ -713,11 +907,14 @@ function update(){
  mb+=row('Payload',P,S.mode==='load'?'computed limit':'your input');
  mb+=`<tr class="tot">${row('Total system mass',M.mass+baseAct+P,'what you must mount and power').slice(4)}`;
  $('#mbTbl').innerHTML=mb+'</tbody></table>';
-
  /* per-joint table */
- let t=`<table><thead><tr><th>Joint</th><th>Bending util</th><th>Torque util</th>
-  <th>Demand<br>N·m</th><th>Bending cap<br>N·m</th><th>Actuator cap<br>N·m</th><th>Payload limit<br>kg</th>
-  <th>δ local<br>mm</th><th>f<sub>n</sub><br>Hz</th>${S.dyn?'<th>T<sub>req</sub> dyn<br>N·m</th><th>Headroom</th>':''}<th>Binding</th></tr></thead><tbody>`;
+ const DJ='#dockJoint';
+ let t=`<table><thead><tr><th>Joint${ic('j.joint',null,DJ)}</th><th>Bending util${ic('j.bend',null,DJ)}</th>
+  <th>Torque util${ic('j.torque',null,DJ)}</th><th>Demand<br>N·m${ic('j.demand',null,DJ)}</th>
+  <th>Bending cap<br>N·m${ic('j.bendcap',null,DJ)}</th><th>Actuator cap<br>N·m${ic('j.actcap',null,DJ)}</th>
+  <th>Payload limit<br>kg${ic('j.payload',null,DJ)}</th><th>δ local<br>mm${ic('j.defl',null,DJ)}</th>
+  <th>f<sub>n</sub><br>Hz${ic('j.fn',null,DJ)}</th>${S.dyn?`<th>T<sub>req</sub> dyn<br>N·m${ic('j.treq',null,DJ)}</th><th>Headroom${ic('j.head',null,DJ)}</th>`:''}
+  <th>Binding${ic('j.bind',null,DJ)}</th></tr></thead><tbody>`;
  for(let i=0;i<S.N;i++){
   const pl=M.arm[i]>0?Math.max(0,(M.X[i]/(S.kd*S.g)-M.sig[i])/M.arm[i]):0;
   const bar=x=>`<div class="bar"><i style="width:${Math.min(100,x*100)}%;background:${ucol(x)}"></i><span>${fmt(x,2)}</span></div>`;
@@ -728,7 +925,6 @@ function update(){
   t+=`<td>${M.V[i]<M.W[i]?'bending':'actuator'}</td></tr>`;
  }
  $('#tbl').innerHTML=t+'</tbody></table>';
-
  /* advice */
  const a=[];
  if(def.dtip>S.dmax)a.push(`<b>Deflection governs.</b> Bending stiffness scales with h³ — raising the height of link ${1+def.de.indexOf(Math.max(...def.de))} by 25% cuts its droop by about half. A hollow section of the same outside size is far more efficient than adding infill.`);
@@ -759,18 +955,19 @@ function update(){
  a.push(`Power budget: a 25–35 kg·cm digital servo can draw 2.5–3 A at stall. ${S.N} of them plus the gripper needs a supply (and wiring) rated for the simultaneous worst case, not the average — brownouts cause position glitches that look like software bugs.`);
  a.push(`Not modelled here: grip force, servo output-shaft and horn strength (often the real weak point), torsion when the base slews, buckling of compression members, joint backlash and bearing play, fastener pull-out, and stress concentrations at the joints.`);
  $('#advice').innerHTML=a.map(x=>`<li>${x}</li>`).join('');
-
  drawSections(M);
  drawArm(M,P,def,u);
  $('#modeHelp').innerHTML=S.mode==='load'
   ? 'Link lengths are <b>inputs</b>; the payload limit is computed from bending stress, actuator torque and deflection.'
   : 'Payload is an <b>input</b>; link lengths are solved so the worst utilisation equals exactly 1.00. Set the proportional <b>shares</b> per link.';
+ restoreHelp();
 }
 
 /* ============ EVENTS ============ */
-function syncInputs(sel,val){document.querySelectorAll(sel).forEach(e=>{if(e.type!=='checkbox'&&e.value!=val)e.value=val;});}
+function syncInputs(sel,val){document.querySelectorAll(sel).forEach(e=>{
+ if((e.tagName==='INPUT'||e.tagName==='SELECT')&&e.type!=='checkbox'&&e.value!=val)e.value=val;});}
 function handle(e){
- const t=e.target;if(!t.dataset)return;
+ const t=e.target;if(!t.dataset||t.classList.contains('ib'))return;
  if(t.dataset.g!==undefined){
   const k=t.dataset.g;S[k]=(k==='N'||k==='exag')?+t.value:(t.type==='number'||t.type==='range'?+t.value:t.value);
   syncInputs(`[data-g="${k}"]`,t.value);update();return;
@@ -794,6 +991,11 @@ document.addEventListener('change',handle);
 $('#dynOn').addEventListener('change',e=>{S.dyn=e.target.checked;update();});
 $('#mLoad').onclick=()=>{S.mode='load';$('#mLoad').classList.add('on');$('#mLen').classList.remove('on');update();};
 $('#mLen').onclick=()=>{S.mode='lengths';$('#mLen').classList.add('on');$('#mLoad').classList.remove('on');update();};
+$('#bHelp').onclick=()=>{
+ if(OPEN.size)OPEN.clear();
+ else document.querySelectorAll('[data-help]').forEach(b=>OPEN.add(b.dataset.hid||b.dataset.help));
+ restoreHelp();
+};
 [1,2,3].forEach(n=>{$('#bPreset'+n).onclick=()=>{
  const p=PRESETS[n],d=defaults();
  Object.assign(d,{N:p.N,fos:p.fos,k:p.k,kd:p.kd,eta:p.eta,derate:p.derate,dmax:p.dmax,payload:p.payload,mode:S.mode});
