@@ -209,4 +209,450 @@
     <p>$$M_i = K_d\,g\left[P\,S_i + \sum_{j>i}\left(m_j\left(S_i-S_j+\tfrac{L_j}{2}\right) + P_j\left(S_i-S_j+L_j\right)\right)\right]$$</p>
     <p>Capacity is the lesser of material and motor:</p>
     <p>$$M_{cap,i} = \min\!\left(\underbrace{Z_i\,\frac{\sigma_{y,i}\,k}{\text{FoS}}}_{\text{bending}},\ \underbrace{T_{motor,i}\cdot i_{gear}\cdot \eta}_{\text{actuator}}\right)$$</p>
-    <p>Rearranged for payload, the lim
+    <p>Rearranged for payload, the limit imposed by joint <em>i</em>:</p>
+    <p>$$P_{max,i} = \frac{M_{cap,i}/(K_d\,g) - \Sigma_i}{S_i} \qquad\Rightarrow\qquad P_{max} = \min_i P_{max,i}$$</p>
+  </div>
+
+  <!-- ================= FLOW ================= -->
+  <h2 id="flow">2 · Constraint logic</h2>
+  <div class="mermaid">
+flowchart TD
+  A[Geometry, material, motors] --> B[Section properties A, I, c, Z]
+  B --> C[Link masses and reach to tip]
+  C --> D[Self-weight moment at each joint]
+  D --> E{Capacity check}
+  E --> F[Bending: Z x allowable stress]
+  E --> G[Torque: T x ratio x efficiency]
+  F --> H[Governing capacity = MIN of the two]
+  G --> H
+  H --> I[Payload limit per joint]
+  I --> J[Load limit = MIN across all joints]
+  J --> K{Tip deflection within budget?}
+  K -- Yes --> L[Usable payload confirmed]
+  K -- No --> M[Stiffen section, shorten link, or reduce payload]
+  M --> B
+  </div>
+
+  <!-- ================= MATERIALS ================= -->
+  <h2 id="materials">3 · Material reference table</h2>
+  <p>Place this block on Tab 1 in <strong>rows 40–45</strong>. Both tabs look up against it. Figures are <strong>XY-plane (in-layer)</strong> for printed parts — layer adhesion is far weaker, which is what the knockdown factor <code>k</code> handles.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Row</th><th>A — Material</th><th>B — Density (kg/m³)</th><th>C — Tensile yield (MPa)</th><th>D — E (MPa)</th><th>E — Tg / service max (°C)</th></tr></thead>
+    <tbody>
+      <tr><td class="cell">40</td><td><em>header row</em></td><td colspan="4"><em>type the headings shown above</em></td></tr>
+      <tr><td class="cell">41</td><td>PLA</td><td>1240</td><td>50</td><td>3500</td><td>55</td></tr>
+      <tr><td class="cell">42</td><td>ABS</td><td>1040</td><td>40</td><td>2100</td><td>100</td></tr>
+      <tr><td class="cell">43</td><td>PETG</td><td>1270</td><td>50</td><td>2000</td><td>75</td></tr>
+      <tr><td class="cell">44</td><td>ASA</td><td>1070</td><td>42</td><td>2000</td><td>100</td></tr>
+      <tr><td class="cell">45</td><td>Steel (mild 1018)</td><td>7850</td><td>370</td><td>200000</td><td>400</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="panel caution">
+    <h4>Treat these as starting values, not certified data</h4>
+    <p>Printed strength varies hugely with nozzle temperature, layer height, perimeter count and print orientation. Substitute your own filament datasheet or tensile-test results before trusting any output.</p>
+  </div>
+
+  <!-- ================= SECTIONS ================= -->
+  <h2 id="sections">4 · Cross-section geometry</h2>
+  <p>Six section types are supported. <strong>b</strong> is the width, <strong>h</strong> is the height <em>in the bending plane</em> (vertical, in the worst-case pose), <strong>D</strong> is outside diameter and <strong>t</strong> is wall thickness.</p>
+
+  <figure>
+    <svg viewBox="0 0 880 200" role="img" aria-label="Six supported cross-section types">
+      <!-- solid rod -->
+      <circle class="sect" cx="75" cy="85" r="42"/>
+      <line class="dim" x1="33" y1="85" x2="117" y2="85" marker-start="url(#ag2)" marker-end="url(#ag)"/>
+      <text x="75" y="78" text-anchor="middle" class="lbl">D</text>
+      <text x="75" y="155" text-anchor="middle">Solid Rod</text>
+      <!-- hollow rod -->
+      <circle class="sect" cx="225" cy="85" r="42"/>
+      <circle class="hole" cx="225" cy="85" r="27"/>
+      <line class="dim" x1="198" y1="85" x2="183" y2="85"/>
+      <text x="190" y="76" text-anchor="middle" class="lbl">t</text>
+      <text x="225" y="155" text-anchor="middle">Hollow Rod</text>
+      <!-- solid square -->
+      <rect class="sect" x="338" y="48" width="74" height="74" rx="3"/>
+      <text x="375" y="92" text-anchor="middle" class="lbl">b = h</text>
+      <text x="375" y="155" text-anchor="middle">Solid Square</text>
+      <!-- square tube -->
+      <rect class="sect" x="488" y="48" width="74" height="74" rx="3"/>
+      <rect class="hole" x="502" y="62" width="46" height="46" rx="2"/>
+      <text x="525" y="155" text-anchor="middle">Square Tube</text>
+      <!-- rectangle -->
+      <rect class="sect" x="648" y="38" width="50" height="94" rx="3"/>
+      <line class="dim" x1="648" y1="146" x2="698" y2="146" marker-start="url(#ag2)" marker-end="url(#ag)"/>
+      <text x="673" y="163" text-anchor="middle" class="lbl">b</text>
+      <line class="dim" x1="712" y1="38" x2="712" y2="132" marker-start="url(#ag2)" marker-end="url(#ag)"/>
+      <text x="726" y="88" class="lbl">h</text>
+      <text x="673" y="22" text-anchor="middle">Rectangle</text>
+      <!-- rect tube -->
+      <rect class="sect" x="788" y="38" width="50" height="94" rx="3"/>
+      <rect class="hole" x="800" y="50" width="26" height="70" rx="2"/>
+      <text x="813" y="22" text-anchor="middle">Rect Tube</text>
+      <text x="813" y="155" text-anchor="middle" class="lbl">hollow</text>
+    </svg>
+    <figcaption>Set <code>t = 0</code> on any section to force the solid variant. Bending occurs about the horizontal axis, so <strong>h</strong> is the dimension that earns you stiffness.</figcaption>
+  </figure>
+
+  <div class="panel note">
+    <p>Stiffness scales with <strong>h³</strong> in bending — doubling the height of a link multiplies its bending stiffness by eight, while doubling the width only doubles it. A hollow section removes material from near the neutral axis where it contributes almost nothing, which is why tubes dominate on strength-to-weight.</p>
+    <p>$$I_{rect}=\frac{bh^3}{12} \qquad I_{tube}=\frac{\pi\left(D^4-d^4\right)}{64} \qquad Z=\frac{I}{c} \qquad \sigma=\frac{M}{Z}$$</p>
+  </div>
+
+  <!-- ================= TAB 1 ================= -->
+  <h2 id="t1-globals">5 · Tab 1 “Load Limit” — global inputs</h2>
+  <p>Name the first worksheet <strong>Load Limit</strong>. Enter values in column B.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Cell</th><th>Input</th><th>Suggested value</th><th>Why it matters</th></tr></thead>
+    <tbody>
+      <tr><td class="cell">B3</td><td>Number of joints N (1–6)</td><td>3</td><td>Rows beyond N are ignored throughout</td></tr>
+      <tr><td class="cell">B4</td><td>Factor of safety, FoS</td><td>2.5 metal / 3–4 FDM</td><td>Covers material scatter and load uncertainty</td></tr>
+      <tr><td class="cell">B5</td><td>Print knockdown factor, k</td><td>1.0 steel / 0.55–0.7 FDM</td><td>Real printed strength vs datasheet</td></tr>
+      <tr><td class="cell">B6</td><td>Gravity g (m/s²)</td><td>9.81</td><td></td></tr>
+      <tr><td class="cell">B7</td><td>Dynamic amplification, K<sub>d</sub></td><td>1.3–2.0</td><td>1.3 slow and smooth; 2.0 fast start-stop</td></tr>
+      <tr><td class="cell">B8</td><td>Drivetrain efficiency, η</td><td>0.9 spur / 0.8 belt / 0.7 worm</td><td>Torque actually reaching the joint</td></tr>
+      <tr><td class="cell">B9</td><td>Max allowable tip deflection (mm)</td><td>1.0</td><td>Your accuracy requirement</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 id="t1-links">Link table — inputs (rows 12–17 = links 1–6)</h3>
+  <p>Link 1 is nearest the base. Set unused rows to <code>0</code> length and <code>0</code> mass.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Col</th><th>Header</th><th>Type</th></tr></thead>
+    <tbody>
+      <tr><td class="cell">A</td><td>Link # (type 1–6 down the rows)</td><td>fixed</td></tr>
+      <tr><td class="cell">B</td><td>Length L (mm)</td><td>input</td></tr>
+      <tr><td class="cell">C</td><td>Material</td><td>dropdown → source <code>=$A$41:$A$45</code></td></tr>
+      <tr><td class="cell">D</td><td>Section</td><td>dropdown → list below</td></tr>
+      <tr><td class="cell">E</td><td>D1 — OD, or width b (mm)</td><td>input</td></tr>
+      <tr><td class="cell">F</td><td>D2 — height h in bending plane (mm)</td><td>input (rectangles only)</td></tr>
+      <tr><td class="cell">G</td><td>Wall t (mm) — 0 = solid</td><td>input</td></tr>
+      <tr><td class="cell">P</td><td>Lumped mass at distal end (kg) — next motor, gearbox, bracket</td><td>input</td></tr>
+      <tr><td class="cell">Q</td><td>Motor peak torque (N·m)</td><td>input</td></tr>
+      <tr><td class="cell">R</td><td>Gear ratio (:1)</td><td>input</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p><strong>Section dropdown list</strong> — paste into Data Validation → List → Source:</p>
+  <div class="f"><code>Solid Rod,Hollow Rod,Solid Square,Square Tube,Rectangle,Rect Tube</code><button onclick="cp(this)">Copy</button></div>
+
+  <h3 id="t1-calc">Calculated columns</h3>
+  <p>Enter each formula in <strong>row 12</strong>, then fill down to row 17.</p>
+
+  <h4>H — Area (mm²)</h4>
+  <div class="f"><code>=IF($D12="Solid Rod",PI()/4*$E12^2,
+ IF($D12="Hollow Rod",PI()/4*($E12^2-MAX(0,$E12-2*$G12)^2),
+ IF($D12="Solid Square",$E12^2,
+ IF($D12="Square Tube",$E12^2-MAX(0,$E12-2*$G12)^2,
+ IF($D12="Rectangle",$E12*$F12,
+ IF($D12="Rect Tube",$E12*$F12-MAX(0,$E12-2*$G12)*MAX(0,$F12-2*$G12),0))))))</code><button onclick="cp(this)">Copy</button></div>
+
+  <h4>I — Second moment of area (mm⁴)</h4>
+  <div class="f"><code>=IF($D12="Solid Rod",PI()/64*$E12^4,
+ IF($D12="Hollow Rod",PI()/64*($E12^4-MAX(0,$E12-2*$G12)^4),
+ IF($D12="Solid Square",$E12^4/12,
+ IF($D12="Square Tube",($E12^4-MAX(0,$E12-2*$G12)^4)/12,
+ IF($D12="Rectangle",$E12*$F12^3/12,
+ IF($D12="Rect Tube",($E12*$F12^3-MAX(0,$E12-2*$G12)*MAX(0,$F12-2*$G12)^3)/12,0))))))</code><button onclick="cp(this)">Copy</button></div>
+
+  <h4>J — Extreme fibre distance c (mm)</h4>
+  <div class="f"><code>=IF(OR($D12="Rectangle",$D12="Rect Tube"),$F12/2,$E12/2)</code><button onclick="cp(this)">Copy</button></div>
+
+  <h4>K — Section modulus Z (mm³)</h4>
+  <div class="f"><code>=IFERROR($I12/$J12,0)</code><button onclick="cp(this)">Copy</button></div>
+
+  <h4>L, M, N — Material lookups (density, yield, E)</h4>
+  <div class="f"><code>=IFERROR(XLOOKUP($C12,$A$41:$A$45,$B$41:$B$45),0)</code><button onclick="cp(this)">Copy</button></div>
+  <div class="f"><code>=IFERROR(XLOOKUP($C12,$A$41:$A$45,$C$41:$C$45),0)</code><button onclick="cp(this)">Copy</button></div>
+  <div class="f"><code>=IFERROR(XLOOKUP($C12,$A$41:$A$45,$D$41:$D$45),0)</code><button onclick="cp(this)">Copy</button></div>
+  <p style="font-size:.86rem;color:var(--tx2)">On older Excel without XLOOKUP, swap to <code>VLOOKUP($C12,$A$41:$E$45,2,FALSE)</code> and change the column index to 3 and 4 respectively.</p>
+
+  <h4>O — Link mass (kg)</h4>
+  <div class="f"><code>=$H12*$B12/1000000000*$L12</code><button onclick="cp(this)">Copy</button></div>
+
+  <h4>S — Reach from this joint to the tip (mm)</h4>
+  <div class="f"><code>=SUMPRODUCT(($A$12:$A$17&gt;=$A12)*($A$12:$A$17&lt;=$B$3)*$B$12:$B$17)</code><button onclick="cp(this)">Copy</button></div>
+
+  <h4>T — Self-weight moment about this joint (kg·mm)</h4>
+  <div class="f"><code>=SUMPRODUCT(($A$12:$A$17&gt;=$A12)*($A$12:$A$17&lt;=$B$3)*
+ ($O$12:$O$17*($S12-$S$12:$S$17+$B$12:$B$17/2)
+ +$P$12:$P$17*($S12-$S$12:$S$17+$B$12:$B$17)))</code><button onclick="cp(this)">Copy</button></div>
+
+  <h4>U — Allowable stress (MPa) · V — Allowable moment (N·mm) · W — Available joint torque (N·mm)</h4>
+  <div class="f"><code>=$M12*$B$5/$B$4</code><button onclick="cp(this)">Copy</button></div>
+  <div class="f"><code>=$K12*$U12</code><button onclick="cp(this)">Copy</button></div>
+  <div class="f"><code>=$Q12*$R12*$B$8*1000</code><button onclick="cp(this)">Copy</button></div>
+
+  <h4>X — Governing capacity (N·mm)</h4>
+  <div class="f"><code>=MIN($V12,$W12)</code><button onclick="cp(this)">Copy</button></div>
+
+  <h4>Y — Payload limit set by this joint (kg)</h4>
+  <div class="f"><code>=IF(OR($A12&gt;$B$3,$S12=0),"",MAX(0,($X12/($B$7*$B$6)-$T12)/$S12))</code><button onclick="cp(this)">Copy</button></div>
+
+  <h4>Z — Binding constraint</h4>
+  <div class="f"><code>=IF($A12&gt;$B$3,"",IF($V12&lt;$W12,"Material (bending)","Motor torque"))</code><button onclick="cp(this)">Copy</button></div>
+
+  <!-- deflection -->
+  <h3 id="t1-defl">Deflection block (columns AB–AF, same rows)</h3>
+  <p>Each link is a cantilever carrying a tip force, an applied end moment from everything outboard, and its own distributed weight. The <em>slope</em> at the end of each link is then carried out to the tip and added — this is what makes a long arm droop far more than any single link calculation suggests.</p>
+
+  <figure>
+    <svg viewBox="0 0 880 250" role="img" aria-label="Cantilever link loading and deflection model">
+      <!-- wall -->
+      <rect x="40" y="40" width="22" height="130" fill="#1c2330" stroke="#30363d"/>
+      <g stroke="#9aa7b4" stroke-width="1">
+        <line x1="40" y1="46" x2="30" y2="56"/><line x1="40" y1="68" x2="30" y2="78"/>
+        <line x1="40" y1="90" x2="30" y2="100"/><line x1="40" y1="112" x2="30" y2="122"/>
+        <line x1="40" y1="134" x2="30" y2="144"/><line x1="40" y1="156" x2="30" y2="166"/>
+      </g>
+      <!-- undeflected -->
+      <line x1="62" y1="105" x2="520" y2="105" stroke="#30363d" stroke-width="2" stroke-dasharray="6 4"/>
+      <!-- deflected -->
+      <path class="acc" d="M62,105 Q330,110 520,168"/>
+      <!-- distributed load -->
+      <g class="frc" marker-end="url(#ar)" opacity=".75">
+        <line x1="110" y1="68" x2="110" y2="98"/><line x1="180" y1="68" x2="180" y2="98"/>
+        <line x1="250" y1="68" x2="250" y2="99"/><line x1="320" y1="68" x2="320" y2="101"/>
+        <line x1="390" y1="68" x2="390" y2="103"/><line x1="460" y1="68" x2="460" y2="105"/>
+      </g>
+      <line x1="105" y1="68" x2="465" y2="68" stroke="#f85149" stroke-width="2"/>
+      <text x="285" y="58" text-anchor="middle" class="frctx">w — self weight per mm (col AD)</text>
+      <!-- tip force -->
+      <line class="frc" x1="520" y1="168" x2="520" y2="222" marker-end="url(#ar)" stroke-width="3"/>
+      <text x="534" y="212" class="frctx">F (col AB)</text>
+      <!-- end moment -->
+      <path class="frc" d="M556,150 A34,34 0 1,1 556,186" fill="none" marker-end="url(#ar)"/>
+      <text x="600" y="172" class="frctx">Mₑ (col AC)</text>
+      <!-- deflection dim -->
+      <g class="dim" marker-start="url(#ag2)" marker-end="url(#ag)">
+        <line x1="498" y1="105" x2="498" y2="168"/>
+      </g>
+      <text x="446" y="142" class="lbl">δ</text>
+      <!-- slope -->
+      <line x1="470" y1="152" x2="580" y2="112" stroke="#d29922" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <path d="M505,138 A40,40 0 0,1 520,160" fill="none" stroke="#d29922" stroke-width="1.5"/>
+      <text x="528" y="132" fill="#d29922" font-size="12">θ</text>
+      <!-- length dim -->
+      <g class="dim" marker-start="url(#ag2)" marker-end="url(#ag)">
+        <line x1="62" y1="238" x2="520" y2="238"/>
+      </g>
+      <text x="291" y="232" text-anchor="middle" class="lbl">L — this link</text>
+      <text x="700" y="60" class="lbl">F  = weight of payload + all</text>
+      <text x="700" y="78" class="lbl">     distal links and masses</text>
+      <text x="700" y="100" class="lbl">Mₑ = moment fed back by the</text>
+      <text x="700" y="118" class="lbl">     outboard chain</text>
+      <text x="700" y="222" class="lbl">θ is multiplied by the</text>
+      <text x="700" y="240" class="lbl">remaining reach and added</text>
+    </svg>
+    <figcaption>Superposition per link: tip load + end moment + distributed self weight. Total droop = Σδ + Σ(θ × remaining reach).</figcaption>
+  </figure>
+
+  <div class="panel note">
+    <p>$$\delta=\frac{FL^3}{3EI}+\frac{M_eL^2}{2EI}+\frac{wL^4}{8EI} \qquad \theta=\frac{FL^2}{2EI}+\frac{M_eL}{EI}+\frac{wL^3}{6EI}$$</p>
+    <p>$$\delta_{tip}=\sum_i \delta_i + \sum_i \theta_i\,S_{i+1}$$</p>
+  </div>
+
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Col</th><th>Quantity</th><th>Formula (row 12, fill down)</th></tr></thead>
+    <tbody>
+      <tr><td class="cell">AB</td><td>Point load at link tip, F (N)</td><td><code>=$B$7*$B$6*($B$25+$P12+SUMPRODUCT(($A$12:$A$17&gt;$A12)*($A$12:$A$17&lt;=$B$3)*($O$12:$O$17+$P$12:$P$17)))</code></td></tr>
+      <tr><td class="cell">AC</td><td>Moment into link tip, Mₑ (N·mm)</td><td><code>=$B$7*$B$6*($B$25*IFERROR($S13,0)+IFERROR($T13,0))</code></td></tr>
+      <tr><td class="cell">AD</td><td>Self weight per mm, w (N/mm)</td><td><code>=IFERROR($B$7*$B$6*$O12/$B12,0)</code></td></tr>
+      <tr><td class="cell">AE</td><td>Tip slope θ (rad)</td><td><code>=IFERROR(($AB12*$B12^2/2+$AC12*$B12+$AD12*$B12^3/6)/($N12*$I12),0)</code></td></tr>
+      <tr><td class="cell">AF</td><td>Local deflection δ (mm)</td><td><code>=IFERROR(($AB12*$B12^3/3+$AC12*$B12^2/2+$AD12*$B12^4/8)/($N12*$I12),0)</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h4>B29 — total tip deflection (mm)</h4>
+  <div class="f"><code>=SUMPRODUCT($AF$12:$AF$17)+SUMPRODUCT($AE$12:$AE$17,IFERROR($S$13:$S$18,0))</code><button onclick="cp(this)">Copy</button></div>
+
+  <h3 id="t1-results">Results block</h3>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Cell</th><th>Label</th><th>Formula</th></tr></thead>
+    <tbody>
+      <tr><td class="cell">B22</td><td><strong>Load limit (kg)</strong></td><td><code>=MIN($Y$12:$Y$17)</code></td></tr>
+      <tr><td class="cell">B23</td><td>Binding joint</td><td><code>=INDEX($A$12:$A$17,MATCH($B$22,$Y$12:$Y$17,0))</code></td></tr>
+      <tr><td class="cell">B24</td><td>Binding constraint</td><td><code>=INDEX($Z$12:$Z$17,MATCH($B$22,$Y$12:$Y$17,0))</code></td></tr>
+      <tr><td class="cell">B25</td><td>Trial payload for deflection (kg)</td><td><code>=$B$22</code></td></tr>
+      <tr><td class="cell">B26</td><td>Total reach (mm)</td><td><code>=$S$12</code></td></tr>
+      <tr><td class="cell">B27</td><td>Arm mass (kg)</td><td><code>=SUMPRODUCT(($A$12:$A$17&lt;=$B$3)*($O$12:$O$17+$P$12:$P$17))</code></td></tr>
+      <tr><td class="cell">B28</td><td>Payload-to-arm ratio</td><td><code>=IFERROR($B$22/$B$27,0)</code></td></tr>
+      <tr><td class="cell">B29</td><td>Total tip deflection (mm)</td><td><em>formula above</em></td></tr>
+      <tr><td class="cell">B30</td><td>Deflection verdict</td><td><code>=IF($B$29&lt;=$B$9,"OK","FAILS - stiffen or shorten")</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="panel caution">
+    <p><strong>Stiffness usually governs printed arms.</strong> Expect B30 to fail long before B22 is reached. Reduce B25 until deflection passes — that figure is your <em>practical</em> payload, and it is often a fraction of the strength-based answer.</p>
+  </div>
+
+  <!-- ================= TAB 2 ================= -->
+  <h2 id="t2-globals">6 · Tab 2 “Link Lengths for Load” — global inputs</h2>
+  <p>Same column structure as Tab 1, but lengths become <strong>outputs</strong>. All six lengths are driven from one variable — total reach — through a proportional split, so a single Goal Seek can solve the whole chain.</p>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Cell</th><th>Input</th></tr></thead>
+    <tbody>
+      <tr><td class="cell">B3</td><td>Number of joints N</td></tr>
+      <tr><td class="cell">B4</td><td><strong>Payload at end of arm (kg)</strong></td></tr>
+      <tr><td class="cell">B5</td><td>Factor of safety</td></tr>
+      <tr><td class="cell">B6</td><td>Print knockdown k</td></tr>
+      <tr><td class="cell">B7</td><td>Gravity g = 9.81</td></tr>
+      <tr><td class="cell">B8</td><td>Dynamic amplification K<sub>d</sub></td></tr>
+      <tr><td class="cell">B9</td><td>Drivetrain efficiency η</td></tr>
+      <tr><td class="cell">B10</td><td><strong>Total reach R (mm) — the solver variable</strong></td></tr>
+      <tr><td class="cell">B11</td><td>Max allowable tip deflection (mm)</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 id="t2-calc">Link table changes</h3>
+  <p>Add <strong>column AH — Length share</strong> as an input (e.g. <code>1</code>, <code>1</code>, <code>0.6</code> — any scale, it is normalised). Column B then becomes a formula:</p>
+  <div class="f"><code>=IF($A12&gt;$B$3,0,$B$10*$AH12/SUMPRODUCT(($A$12:$A$17&lt;=$B$3)*$AH$12:$AH$17))</code><button onclick="cp(this)">Copy</button></div>
+  <p>Copy columns C–T, U–W and the deflection block across from Tab 1 unchanged, remapping the global references (B5→FoS, B6→k, B7→g, B8→K<sub>d</sub>, B9→η) and pointing material lookups back at Tab 1:</p>
+  <div class="f"><code>=IFERROR(XLOOKUP($C12,'Load Limit'!$A$41:$A$45,'Load Limit'!$B$41:$B$45),0)</code><button onclick="cp(this)">Copy</button></div>
+
+  <h4>Demand and utilisation columns</h4>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Col</th><th>Quantity</th><th>Formula (row 12, fill down)</th></tr></thead>
+    <tbody>
+      <tr><td class="cell">AI</td><td>Demand moment at joint (N·mm)</td><td><code>=$B$8*$B$7*($B$4*$S12+$T12)</code></td></tr>
+      <tr><td class="cell">AJ</td><td>Stress utilisation</td><td><code>=IF($A12&gt;$B$3,"",IFERROR($AI12/$V12,9))</code></td></tr>
+      <tr><td class="cell">AK</td><td>Torque utilisation</td><td><code>=IF($A12&gt;$B$3,"",IFERROR($AI12/$W12,9))</code></td></tr>
+      <tr><td class="cell">AL</td><td>Worst at this joint</td><td><code>=IF($A12&gt;$B$3,"",MAX($AJ12,$AK12))</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 id="t2-solve">Solve block and Goal Seek</h3>
+  <div class="scroll">
+  <table>
+    <thead><tr><th>Cell</th><th>Label</th><th>Formula</th></tr></thead>
+    <tbody>
+      <tr><td class="cell">B14</td><td>Deflection utilisation</td><td><code>=$B$29/$B$11</code></td></tr>
+      <tr><td class="cell">B15</td><td><strong>Worst utilisation</strong></td><td><code>=MAX(MAX($AL$12:$AL$17),$B$14)</code></td></tr>
+      <tr><td class="cell">B16</td><td>Binding joint</td><td><code>=INDEX($A$12:$A$17,MATCH(MAX($AL$12:$AL$17),$AL$12:$AL$17,0))</code></td></tr>
+      <tr><td class="cell">B17</td><td>Binding mode</td><td><code>=IF($B$14&gt;=MAX($AL$12:$AL$17),"Deflection",IF(INDEX($AJ$12:$AJ$17,$B$16)&gt;INDEX($AK$12:$AK$17,$B$16),"Material","Motor torque"))</code></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="mermaid">
+flowchart LR
+  A[Enter payload, materials, sections, motors] --> B[Set length shares in column AH]
+  B --> C[Guess total reach in B10]
+  C --> D[Goal Seek: set B15 to value 1 by changing B10]
+  D --> E[Column B now shows max permissible length per link]
+  E --> F{Read binding mode in B17}
+  F -- Motor torque --> G[Add gearing or a larger motor]
+  F -- Material --> H[Increase section height or change material]
+  F -- Deflection --> I[Use a tube, raise h, or accept less reach]
+  G --> D
+  H --> D
+  I --> D
+  </div>
+
+  <ol class="steps">
+    <li>Enter the payload in <code>B4</code> and a sensible starting guess for total reach in <code>B10</code>.</li>
+    <li>Go to <strong>Data → What-If Analysis → Goal Seek</strong>.</li>
+    <li><em>Set cell</em> <code>B15</code>, <em>To value</em> <code>1</code>, <em>By changing cell</em> <code>B10</code>.</li>
+    <li>Column B now shows the <strong>maximum permissible length of every link</strong>; <code>B16</code> and <code>B17</code> name the constraint that stopped you.</li>
+    <li>Re-run after <em>any</em> change to shares, sections, materials or motors.</li>
+  </ol>
+
+  <div class="panel note">
+    <h4>First-pass sanity check</h4>
+    <p>For a single link, ignoring self-weight:</p>
+    <p>$$L_{max}\approx\frac{1}{K_d\,g\,P}\min\!\left(Z\sigma_{allow},\ T_{motor}\,i\,\eta\right)$$</p>
+    <p>To optimise the <em>shares</em> too — say, minimise arm mass at fixed reach and payload — load Solver, set shares and wall thicknesses as variables, constrain <code>B15 ≤ 1</code>, and minimise arm mass.</p>
+  </div>
+
+  <!-- ================= EXTRA ================= -->
+  <h2 id="extra">7 · Additional calculations worth adding</h2>
+
+  <h3>Dynamics — usually the real limit</h3>
+  <p>Static torque rarely sizes a motor. Add a trapezoidal motion profile (target joint speed ω, acceleration time t<sub>a</sub>) and compute the inertia term, where J for each link about the joint is:</p>
+  <p>$$J=\tfrac{1}{3}mL^2+\sum m_{distal}d^2 \qquad T_{req}=T_{gravity}+J\alpha+T_{friction}$$</p>
+  <p>Then check <strong>RMS torque</strong> across the duty cycle against the motor's continuous rating — peak torque is a few-second figure, and steppers lose torque steeply with speed, so overlay your torque–speed curve.</p>
+
+  <h3>Natural frequency</h3>
+  <p>The arm will wobble long before it breaks. Keep f<sub>n</sub> above roughly 5× your fastest commanded motion frequency, or you will chase oscillation forever in tuning.</p>
+  <p>$$f_n\approx\frac{1}{2\pi}\sqrt{\frac{3EI}{mL^3}}$$</p>
+
+  <h3>Buckling</h3>
+  <p>Any link in compression — common in parallelogram or linkage-driven designs — needs an Euler check. K = 1 pinned, 0.5 fixed–fixed.</p>
+  <p>$$P_{cr}=\frac{\pi^2EI}{(KL)^2}$$</p>
+
+  <h3>Torsion</h3>
+  <p>When the base rotates with the arm extended sideways, links twist. Open or thin-wall printed sections are very poor in torsion.</p>
+  <p>$$\tau=\frac{Tr}{J_p} \qquad \phi=\frac{TL}{GJ_p}$$</p>
+
+  <h3>FDM-specific derates</h3>
+  <ul>
+    <li>Print links <strong>along</strong> their length so loads run in-plane, never across layers.</li>
+    <li>Four or more perimeters with sparse infill beats dense infill for bending stiffness per gram.</li>
+    <li><strong>PLA creeps badly under sustained load</strong> and softens near 55 °C beside a warm stepper. If a pose is held for minutes, derate PLA to about 40% of yield or move to PETG/ASA.</li>
+    <li>Use heat-set inserts at every fastener, and check bolt pull-out and bearing stress at the joints — that is where printed arms actually fail first.</li>
+  </ul>
+
+  <h3>Joint compliance</h3>
+  <p>Gearbox backlash, belt stretch and bearing play often exceed link deflection. Add a per-joint torsional stiffness (N·m/rad) and sum θ × reach into your error budget alongside the structural droop.</p>
+
+  <h3>Accuracy budget</h3>
+  <p>Combine encoder or step resolution × reach, backlash, deflection and thermal drift into one repeatability figure, then compare it against your task tolerance.</p>
+
+  <h3>Payload modelling</h3>
+  <p>Enter the payload's <strong>centre-of-gravity offset</strong> from the flange, not just its mass. A 500 g gripper holding a part 80 mm out adds real moment and real inertia.</p>
+
+  <h3>Safe states</h3>
+  <p>Check holding torque at power loss — or specify a brake or worm drive — and verify the arm cannot back-drive into a collapse. Add an E-stop and current limiting.</p>
+
+  <!-- ================= CHECKLIST ================= -->
+  <h2 id="checklist">8 · Validation checklist</h2>
+  <div class="cards">
+    <div class="card"><h5>Hang known weights</h5><p>In the worst-case pose, measure droop with a dial indicator and calibrate <code>k</code> against reality.</p></div>
+    <div class="card"><h5>Confirm in FEA</h5><p>Fusion 360 or FreeCAD. The spreadsheet models ideal beams and ignores stress concentrations at the joints — exactly where real failures start.</p></div>
+    <div class="card"><h5>Check the thermal case</h5><p>Measure link temperature next to the motors after a long duty cycle and compare with the Tg column.</p></div>
+    <div class="card"><h5>Test the held pose</h5><p>Leave the arm loaded and extended for an hour, then re-measure. Creep is invisible in any static calculation.</p></div>
+  </div>
+
+  <footer>
+    <p><strong>Disclaimer.</strong> This is an engineering aid built on idealised beam theory and indicative material properties. It ignores stress concentrations, joint and fastener detail, fatigue, creep and thermal effects. Verify any safety-critical or load-bearing design with FEA and physical testing before use.</p>
+    <p>Published with GitHub Pages · last updated <span id="d"></span></p>
+  </footer>
+</main>
+</div>
+
+<script>
+  function cp(btn){
+    const t = btn.parentElement.querySelector('code').innerText;
+    const done = () => { btn.textContent='Copied'; btn.classList.add('done');
+      setTimeout(()=>{btn.textContent='Copy'; btn.classList.remove('done');},1400); };
+    if(navigator.clipboard && window.isSecureContext){ navigator.clipboard.writeText(t).then(done); }
+    else { const ta=document.createElement('textarea'); ta.value=t; document.body.appendChild(ta);
+           ta.select(); document.execCommand('copy'); ta.remove(); done(); }
+  }
+  document.getElementById('d').textContent =
+    new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
+</script>
+
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body,{delimiters:[
+    {left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false}]});"></script>
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({startOnLoad:true, theme:'dark',
+    themeVariables:{background:'#161b22', primaryColor:'#1c2330', primaryTextColor:'#e6edf3',
+      primaryBorderColor:'#30363d', lineColor:'#58a6ff', fontSize:'14px'}});
+</script>
+</body>
+</html>
