@@ -46,6 +46,9 @@
   .card p{margin:0; font-size:.88rem; color:var(--tx2)}
   .pill{display:inline-block; font-size:.7rem; letter-spacing:.05em; text-transform:uppercase;
         padding:.15rem .5rem; border-radius:99px; border:1px solid var(--line); color:var(--tx2)}
+  .page-link{display:inline-block; margin:0 0 1rem; padding:.4rem .7rem; border:1px solid var(--line);
+             border-radius:7px; background:var(--panel2); color:var(--tx); text-decoration:none; font-size:.85rem}
+  .page-link:hover{border-color:var(--accent); color:var(--accent)}
   /* ---- tables ---- */
   .scroll{overflow-x:auto; margin:1rem 0}
   table{border-collapse:collapse; width:100%; font-size:.88rem; min-width:520px}
@@ -112,6 +115,7 @@
 </nav>
 
 <main>
+  <a class="page-link" href="armLiveCalculator.html">Open live calculator</a>
   <span class="pill">Engineering aid · v1.0</span>
   <h1>Robot Arm Load Limit &amp; Link-Length Calculator</h1>
   <p class="lede">A complete build specification for a two-tab Excel workbook. <strong>Tab 1</strong> takes a geometry and returns the maximum payload. <strong>Tab 2</strong> takes a payload and returns the maximum permissible length of every link. Every formula below is copy-paste ready.</p>
