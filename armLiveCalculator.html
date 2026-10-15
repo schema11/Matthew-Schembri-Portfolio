@@ -4,24 +4,26 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Robot Arm Load &amp; Link-Length Calculator — Live</title>
-<meta name="description" content="Interactive robot arm calculator: payload limit, permissible link lengths, bending stress, motor torque and tip deflection with live scaled diagrams.">
+<meta name="description" content="Interactive robot arm calculator: servo selection, payload limit, permissible link lengths, bending stress, motor torque and tip deflection with live scaled diagrams.">
 <style>
 :root{--bg:#0d1117;--p1:#161b22;--p2:#1c2330;--ln:#30363d;--tx:#e6edf3;--t2:#9aa7b4;
---ac:#58a6ff;--ok:#3fb950;--wn:#d29922;--bd:#f85149;--mono:ui-monospace,SFMono-Regular,Consolas,monospace}
+--ac:#58a6ff;--ok:#3fb950;--wn:#d29922;--bd:#f85149;--vi:#8957e5;--mono:ui-monospace,SFMono-Regular,Consolas,monospace}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
 header{border-bottom:1px solid var(--ln);background:linear-gradient(180deg,#161b22,#0d1117);padding:1.1rem 1.25rem}
 .hd{max-width:1480px;margin:0 auto;display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between}
 h1{font-size:1.2rem;margin:0}
 h1 small{display:block;font-weight:400;font-size:.76rem;color:var(--t2);margin-top:.15rem}
-.wrap{max-width:1480px;margin:0 auto;padding:1.25rem;display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:1.25rem;align-items:start}
+.wrap{max-width:1480px;margin:0 auto;padding:1.25rem;display:grid;grid-template-columns:minmax(0,392px) minmax(0,1fr);gap:1.25rem;align-items:start}
 .col-r{position:sticky;top:1rem}
 .panel{background:var(--p1);border:1px solid var(--ln);border-radius:10px;padding:.9rem 1rem;margin-bottom:1rem}
-.panel>h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;color:var(--t2);margin:0 0 .7rem;font-weight:600}
+.panel>h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;color:var(--t2);margin:0 0 .7rem;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.hint{font-size:.74rem;color:var(--t2);margin:.5rem 0 0}
 /* buttons / modes */
 .btn{background:var(--p2);color:var(--tx);border:1px solid var(--ln);border-radius:7px;padding:.4rem .7rem;font-size:.8rem;cursor:pointer}
 .btn:hover{border-color:var(--ac)}
 .btn.sm{padding:.25rem .5rem;font-size:.72rem}
+.btn.prim{border-color:#1f6feb66;background:#1f6feb1a;color:var(--ac)}
 .page-link{text-decoration:none;display:inline-block}
 .modes{display:flex;gap:.4rem;background:var(--p2);border:1px solid var(--ln);border-radius:8px;padding:.25rem}
 .modes button{flex:1;background:none;border:0;color:var(--t2);font-size:.8rem;padding:.4rem .6rem;border-radius:6px;cursor:pointer;white-space:nowrap}
@@ -37,17 +39,23 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;heigh
 input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--ac);cursor:pointer;border:2px solid #0d1117}
 input[type=number],select{background:#010409;color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:.3rem .4rem;font:inherit;font-size:.8rem;width:100%}
 input[type=number]:focus,select:focus{outline:none;border-color:var(--ac)}
+select optgroup{background:#0d1117;color:var(--t2);font-style:normal}
+select option{background:#0d1117;color:var(--tx)}
 input:disabled,select:disabled{opacity:.42;cursor:not-allowed}
-label.ck{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--t2)}
+label.ck{display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:var(--t2);padding:.1rem 0}
+label.ck input{accent-color:var(--ac)}
 /* link cards */
 .lc{background:var(--p1);border:1px solid var(--ln);border-radius:10px;margin-bottom:.7rem;overflow:hidden}
 .lch{display:flex;align-items:center;justify-content:space-between;gap:.5rem;background:var(--p2);padding:.5rem .75rem;border-bottom:1px solid var(--ln)}
 .lch b{font-size:.85rem}.lch b small{color:var(--t2);font-weight:400}
-.lcl{font-family:var(--mono);font-size:.78rem;color:var(--ac)}
+.lcl{font-family:var(--mono);font-size:.78rem;color:var(--ac);text-align:right}
 .lcb{display:grid;grid-template-columns:minmax(0,1fr) 124px;gap:.75rem;padding:.75rem}
 .secbox{border:1px dashed var(--ln);border-radius:8px;padding:.3rem;text-align:center}
 .secbox svg{display:block;width:100%;height:auto}
 .secbox div{font-size:.68rem;color:var(--t2);font-family:var(--mono);margin-top:.2rem;line-height:1.3}
+.spec{background:#010409;border:1px solid var(--ln);border-radius:7px;padding:.4rem .5rem;font-family:var(--mono);font-size:.68rem;color:var(--t2);line-height:1.45}
+.spec b{color:var(--ac);font-weight:600}
+.sub{border-top:1px dashed var(--ln);margin:.3rem 0 .1rem;padding-top:.45rem}
 /* results */
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:.6rem}
 .kpi{background:var(--p2);border:1px solid var(--ln);border-radius:9px;padding:.6rem .7rem}
@@ -72,16 +80,21 @@ th,td{border:1px solid var(--ln);padding:.35rem .5rem;text-align:right;white-spa
 th{background:var(--p2);color:var(--t2);font-weight:600;font-size:.72rem}
 th:first-child,td:first-child{text-align:left}
 td{font-family:var(--mono)}
+td.nm{font-family:inherit;text-align:left}
 .bar{position:relative;height:14px;background:#010409;border-radius:3px;overflow:hidden;min-width:70px}
 .bar>i{position:absolute;inset:0 auto 0 0;border-radius:3px}
 .bar>span{position:absolute;inset:0;font-size:.66rem;line-height:14px;text-align:center;color:#e6edf3;text-shadow:0 0 3px #000}
+table.mb{min-width:0}
+table.mb td:first-child{font-family:inherit}
+tr.tot td{background:#1f6feb14;font-weight:700;color:var(--tx)}
 ul.adv{margin:.3rem 0 0;padding-left:1.1rem;font-size:.82rem}
-ul.adv li{margin-bottom:.3rem}
+ul.adv li{margin-bottom:.35rem}
 details{font-size:.82rem;color:var(--t2)}
 details summary{cursor:pointer;color:var(--ac);font-size:.78rem}
 details pre{font-family:var(--mono);font-size:.74rem;white-space:pre-wrap;background:#010409;border:1px solid var(--ln);border-radius:8px;padding:.7rem;color:#7ee787}
 svg text{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;fill:#e6edf3;font-size:12px}
 svg .lbl{fill:#9aa7b4;font-size:11px}
+svg .sml{fill:#6e7b8a;font-size:9.5px}
 svg .dim{stroke:#30363d;stroke-width:1}
 footer{border-top:1px solid var(--ln);margin-top:1rem;padding:1rem 1.25rem 2.5rem;color:var(--t2);font-size:.76rem}
 footer div{max-width:1480px;margin:0 auto}
@@ -89,19 +102,18 @@ footer div{max-width:1480px;margin:0 auto}
 </style>
 </head>
 <body>
-
 <header><div class="hd">
-  <h1>Robot Arm Load &amp; Link-Length Calculator<small>Live bending · torque · deflection model — fully offline</small></h1>
-  <div style="display:flex;gap:.4rem;flex-wrap:wrap">
-    <button class="btn sm" id="bPreset1">Preset: PLA desktop</button>
-    <button class="btn sm" id="bPreset2">PETG mid</button>
-    <button class="btn sm" id="bPreset3">Steel tube</button>
+  <h1>Robot Arm Load &amp; Link-Length Calculator<small>Live bending · torque · deflection model with servo database — fully offline</small></h1>
+  <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
+    <a class="btn sm prim page-link" href="armCalculationsWeb.html">📄 Build specification</a>
+    <span style="width:1px;height:20px;background:var(--ln);margin:0 .15rem"></span>
+    <button class="btn sm" id="bPreset1">Preset: MG996R mini</button>
+    <button class="btn sm" id="bPreset2">25 kg servo arm</button>
+    <button class="btn sm" id="bPreset3">NEMA 17 + steel</button>
     <button class="btn sm" id="bCsv">⬇ CSV</button>
     <button class="btn sm" id="bLink">🔗 Share</button>
-    <a class="btn sm page-link" href="armCalculationsWeb.html">Build specification</a>
   </div>
 </div></header>
-
 <div class="wrap">
 <!-- ================= INPUTS ================= -->
 <div class="col-l">
@@ -111,73 +123,81 @@ footer div{max-width:1480px;margin:0 auto}
       <button id="mLoad" class="on">① Find load limit</button>
       <button id="mLen">② Find link lengths</button>
     </div>
-    <p id="modeHelp" style="font-size:.78rem;color:var(--t2);margin:.6rem 0 0"></p>
+    <p id="modeHelp" class="hint"></p>
   </div>
-
   <div class="panel"><h2>Global inputs</h2><div class="g" id="globals"></div></div>
-
   <div class="panel" style="padding-bottom:.4rem">
     <h2>Links &amp; joints <span class="chip" id="chipN"></span></h2>
     <div id="links"></div>
+    <p class="hint" style="padding-bottom:.5rem">The actuator chosen for joint J<sub>i+1</sub> is physically mounted at the <b>distal end of link i</b>, so its mass is added there automatically. The base actuator (J1) is carried by the base and does not load the structure.</p>
   </div>
-
+  <div class="panel">
+    <h2>End effector <span class="chip" id="chipEE"></span></h2>
+    <div class="g" id="ee"></div>
+    <div class="spec" id="eeSpec" style="margin-top:.55rem"></div>
+    <p class="hint">Total end-effector mass is applied as the distal lumped mass on the final link. The payload is separate — it is the object being gripped.</p>
+  </div>
   <div class="panel">
     <h2>Dynamics check (optional)</h2>
     <label class="ck"><input type="checkbox" id="dynOn"> Include inertia torque (J·α)</label>
     <div class="g" id="dyn" style="margin-top:.55rem"></div>
-    <p style="font-size:.74rem;color:var(--t2);margin:.5rem 0 0">Computed with K<sub>d</sub>=1 to avoid double-counting; compare against the static result.</p>
+    <p class="hint">Computed with K<sub>d</sub>=1 to avoid double-counting; compare against the static result.</p>
   </div>
 </div>
-
 <!-- ================= OUTPUTS ================= -->
 <div class="col-r">
   <figure>
-    <svg id="arm" viewBox="0 0 980 330" role="img" aria-label="Scaled robot arm diagram with deflected shape"></svg>
+    <svg id="arm" viewBox="0 0 980 350" role="img" aria-label="Scaled robot arm diagram with servos, end effector and deflected shape"></svg>
     <div class="legend">
       <span><i style="background:#3fb950"></i>util &lt; 0.6</span>
       <span><i style="background:#d29922"></i>0.6–0.9</span>
       <span><i style="background:#f85149"></i>&gt; 0.9</span>
       <span><i style="background:#30363d"></i>undeflected axis</span>
       <span><i style="background:#8957e5"></i>deflection budget</span>
+      <span><i style="background:#58a6ff;border-radius:50%"></i>joint arc = rotation range</span>
     </div>
     <figcaption id="armCap"></figcaption>
   </figure>
-
   <div class="panel"><h2>Results</h2><div class="kpis" id="kpis"></div>
     <p id="verdict" style="margin:.75rem 0 0;font-size:.85rem"></p></div>
-
+  <div class="panel"><h2>Actuator schedule</h2><div class="scroll" id="actTbl"></div>
+    <p class="hint">Rated figures are indicative manufacturer <b>stall</b> (servo) or <b>holding</b> (stepper) torque. Available torque = rated × qty × derate × gear ratio × η.</p></div>
+  <div class="panel"><h2>Mass budget</h2><div class="scroll" id="mbTbl"></div></div>
   <div class="panel"><h2>Per-joint breakdown</h2><div class="scroll" id="tbl"></div></div>
-
   <div class="panel"><h2>Design advice</h2><ul class="adv" id="advice"></ul></div>
-
   <div class="panel"><details><summary>Formulas used (plain text)</summary>
 <pre id="formulas">SECTION      A, I about bending axis, c = extreme fibre, Z = I/c
 MASS         m_i = A_i * L_i * 1e-9 * rho_i                      [kg]
-REACH        S_i = sum of L_j for j >= i                         [mm]
+COMPONENTS   actuator mass at joint Ji sits at distal end of link i-1
+             P_i (distal lump of link i) = mass(act J_i+1)*qty + bracket
+             P_N (last link)             = EE servo*qty + structure + tooling
+REACH        S_i = sum of L_j for j >= i                          [mm]
+PAYLOAD ARM  a_i = S_i + cg_offset                                [mm]
 SELF WEIGHT  Sig_i = SUM_j>=i [ m_j*(S_i-S_j+L_j/2) + P_j*(S_i-S_j+L_j) ]
-DEMAND       M_i = Kd * g * ( Payload*S_i + Sig_i )              [N.mm]
-CAPACITY     V_i = Z_i * yield_i * k / FoS        (bending)      [N.mm]
-             W_i = T_motor_i * ratio_i * eta * 1000 (actuator)   [N.mm]
+DEMAND       M_i = Kd * g * ( Payload*a_i + Sig_i )               [N.mm]
+CAPACITY     V_i = Z_i * yield_i * k / FoS         (bending)      [N.mm]
+             W_i = T_rated_i * qty_i * derate * ratio_i * eta * 1000
              X_i = MIN(V_i, W_i)
-PAYLOAD      P_i = ( X_i/(Kd*g) - Sig_i ) / S_i ; limit = MIN_i  [kg]
-DEFLECTION   F_i  = Kd*g*(Payload + P_i + sum of distal m,P)     [N]
-             Me_i = Kd*g*(Payload*S_i+1 + Sig_i+1)               [N.mm]
-             w_i  = Kd*g*m_i / L_i                               [N/mm]
-             th_i = (F L^2/2 + Me L + w L^3/6)/(E I)             [rad]
-             d_i  = (F L^3/3 + Me L^2/2 + w L^4/8)/(E I)         [mm]
+PAYLOAD      P_i = ( X_i/(Kd*g) - Sig_i ) / a_i ; limit = MIN_i   [kg]
+DEFLECTION   F_i  = Kd*g*(Payload + P_i + sum of distal m,P)      [N]
+             Me_i = Kd*g*(Payload*a_i+1 + Sig_i+1)                [N.mm]
+             w_i  = Kd*g*m_i / L_i                                [N/mm]
+             th_i = (F L^2/2 + Me L + w L^3/6)/(E I)              [rad]
+             d_i  = (F L^3/3 + Me L^2/2 + w L^4/8)/(E I)          [mm]
              droop = SUM d_i + SUM th_i * S_i+1
-DYNAMICS     J_i = SUM_j>=i [ m_j(L_j^2/12 + dcg^2) + P_j*dl^2 ] + Payload*S_i^2
-             T_req = g*(Payload*S_i+Sig_i)/1000 + J_i*alpha      [N.m]
-FREQUENCY    f_n ~ (1/2pi) * sqrt(3 E I / (m L^3))               [Hz]</pre></details></div>
+SERVO TORQUE T[N.m] = T[kg.cm] * 9.80665 / 100
+SERVO SPEED  no-load deg/s = 60 / t60 ; expect 50-70% under load
+DYNAMICS     J_i = SUM_j>=i [ m_j(L_j^2/12 + dcg^2) + P_j*dl^2 ] + Payload*a_i^2
+             T_req = g*(Payload*a_i+Sig_i)/1000 + J_i*alpha       [N.m]
+FREQUENCY    f_n ~ (1/2pi) * sqrt(3 E I / (m L^3))                [Hz]</pre></details></div>
 </div>
 </div>
-
 <footer><div>
 <strong>Disclaimer.</strong> Engineering aid based on idealised Euler–Bernoulli beam theory, a fully extended horizontal worst-case pose and indicative material properties. It ignores stress concentrations, joint/fastener detail, fatigue, creep, thermal softening and torsion. Verify any load-bearing design with FEA and physical testing. Printed-material figures are in-plane (XY) values — calibrate the knockdown factor <code>k</code> against your own test prints.
+<br><br><strong>Actuator data.</strong> Servo and stepper figures are <em>indicative values for the common clone/class</em>, compiled for comparison only — individual units vary widely between sellers. Hobby servo “kg·cm” ratings are <b>stall torque at the quoted voltage</b>: the motor is drawing maximum current, producing no useful motion and heating rapidly. Never size a joint at stall. Always confirm against the datasheet for the exact part you buy, and treat the derate factor as the single most important number on this page.
 </div></footer>
-
 <script>
-/* ============ DATA ============ */
+/* ============ MATERIAL DATA ============ */
 const MATS={
  PLA  :{rho:1240,sy:50 ,E:3500  ,tg:55 },
  ABS  :{rho:1040,sy:40 ,E:2100  ,tg:100},
@@ -189,80 +209,150 @@ const SECS=['Solid Rod','Hollow Rod','Solid Square','Square Tube','Rectangle','R
 const HOLLOW=s=>s==='Hollow Rod'||s==='Square Tube'||s==='Rect Tube';
 const RECT=s=>s==='Rectangle'||s==='Rect Tube';
 const ROUND=s=>s==='Solid Rod'||s==='Hollow Rod';
+const KGCM=9.80665/100; /* kg.cm -> N.m */
 
-const mkLink=(L,share,mat,sec,d1,d2,t,lump,tq,gr)=>({L,share,mat,sec,d1,d2,t,lump,tq,gr});
+/* ============ ACTUATOR DATABASE ============
+   kgcm = stall torque (servo) at volts; nm computed. For steppers nm = holding torque.
+   mass in g, rot = usable rotation (deg), t60 = sec/60deg (servo), dps = no-load deg/s */
+function sv(o){o.nm=o.nm!==undefined?o.nm:+(o.kgcm*KGCM).toFixed(4);
+ o.dps=o.dps!==undefined?o.dps:(o.t60?+(60/o.t60).toFixed(0):0);return o;}
+const SERV={
+ 'None'      :sv({label:'None — joint not actuated',type:'none',kgcm:0,nm:0,mass:0,rot:0,t60:0,volts:'—',gears:'—',note:'No torque capacity at this joint.'}),
+ 'Custom'    :sv({label:'Custom — enter torque &amp; mass manually',type:'custom',kgcm:0,nm:0,mass:0,rot:360,t60:0,volts:'—',gears:'—',note:'Torque and mass taken from the manual fields.'}),
+ 'SG90'      :sv({label:'SG90 — 1.8 kg·cm micro, 9 g',type:'servo',kgcm:1.8,mass:9,rot:180,t60:0.10,volts:'4.8 V',gears:'nylon',note:'Nylon gears strip easily; positioning toy only.'}),
+ 'MG90S'     :sv({label:'MG90S — 2.2 kg·cm micro metal gear, 13 g',type:'servo',kgcm:2.2,mass:13.4,rot:180,t60:0.08,volts:'6.0 V',gears:'metal',note:'Good micro gripper servo. Noisy, modest resolution.'}),
+ 'MG92B'     :sv({label:'MG92B — 3.5 kg·cm micro metal gear, 14 g',type:'servo',kgcm:3.5,mass:13.8,rot:180,t60:0.08,volts:'6.0 V',gears:'metal',note:'Stronger micro option for wrists and grippers.'}),
+ 'MG995'     :sv({label:'MG995 — 10 kg·cm standard, 55 g',type:'servo',kgcm:10,mass:55,rot:180,t60:0.17,volts:'6.0 V',gears:'metal',note:'Analogue, large deadband; MG996R is a better buy.'}),
+ 'MG996R'    :sv({label:'MG996R — 11 kg·cm standard, 55 g',type:'servo',kgcm:11,mass:55,rot:180,t60:0.17,volts:'6.0 V',gears:'metal',note:'Ubiquitous and cheap. Coreless clone quality varies hugely; real stall often 7–9 kg·cm.'}),
+ 'DS3218'    :sv({label:'DS3218 — 20 kg·cm class, 60 g',type:'servo',kgcm:20,mass:60,rot:180,t60:0.16,volts:'6.8 V',gears:'metal',note:'20 kg class digital. 270° variants available — check before ordering.'}),
+ 'DS3225'    :sv({label:'DS3225 — 25 kg·cm class, 60 g',type:'servo',kgcm:25,mass:60,rot:180,t60:0.15,volts:'6.8 V',gears:'metal',note:'25 kg class digital, waterproof case. Needs a solid 6–7 V supply with headroom.'}),
+ 'DS3230'    :sv({label:'DS3230 — 30 kg·cm class, 60 g',type:'servo',kgcm:30,mass:60,rot:270,t60:0.13,volts:'6.8 V',gears:'metal',note:'30 kg class. Peak current can exceed 3 A — size wiring and BEC accordingly.'}),
+ 'DS3235'    :sv({label:'DS3235 — 35 kg·cm class, 60 g',type:'servo',kgcm:35,mass:60,rot:270,t60:0.13,volts:'6.8 V',gears:'steel',note:'35 kg class steel gear. Output shaft and horn become the weak link.'}),
+ 'RDS5160'   :sv({label:'RDS5160 — 60–65 kg·cm, 160 g',type:'servo',kgcm:65,mass:160,rot:270,t60:0.12,volts:'7.4 V',gears:'steel',note:'Large 1/5-scale case. Heavy — its own mass loads the link below it.'}),
+ 'LX-16A'    :sv({label:'LX-16A bus servo — 17 kg·cm, 52 g',type:'servo',kgcm:17,mass:52,rot:240,t60:0.16,volts:'7.4 V',gears:'metal',note:'Serial bus with position feedback — far easier to control than PWM.'}),
+ 'AX-12A'    :sv({label:'Dynamixel AX-12A — 15.3 kg·cm, 55 g',type:'servo',kgcm:15.3,mass:54.6,rot:300,t60:0.169,volts:'12 V',gears:'engineering plastic',note:'True feedback, temperature and load reporting. Expensive but honest specs.'}),
+ 'XL430'     :sv({label:'Dynamixel XL430-W250 — 1.4 N·m, 57 g',type:'servo',nm:1.4,kgcm:14.3,mass:57.2,rot:360,t60:0.19,volts:'12 V',gears:'engineering plastic',note:'360° continuous or position mode, current-based torque control.'}),
+ 'NEMA14'    :sv({label:'NEMA 14 stepper — 0.14 N·m, 150 g',type:'stepper',nm:0.14,kgcm:1.43,mass:150,rot:360,t60:0,dps:720,volts:'12–24 V',gears:'direct',note:'Add a planetary or belt reduction via the gear ratio field.'}),
+ 'NEMA17-P'  :sv({label:'NEMA 17 pancake — 0.22 N·m, 200 g',type:'stepper',nm:0.22,kgcm:2.24,mass:200,rot:360,t60:0,dps:720,volts:'12–24 V',gears:'direct',note:'Short body, good where mass matters. Needs reduction.'}),
+ 'NEMA17'    :sv({label:'NEMA 17 standard 40 mm — 0.45 N·m, 280 g',type:'stepper',nm:0.45,kgcm:4.59,mass:280,rot:360,t60:0,dps:720,volts:'12–24 V',gears:'direct',note:'Workhorse. Holding torque falls steeply with speed — check the torque–speed curve.'}),
+ 'NEMA17-L'  :sv({label:'NEMA 17 long 48 mm — 0.65 N·m, 400 g',type:'stepper',nm:0.65,kgcm:6.63,mass:400,rot:360,t60:0,dps:600,volts:'12–24 V',gears:'direct',note:'Heavy for a distal joint; best at the base.'}),
+ 'NEMA23'    :sv({label:'NEMA 23 — 1.26 N·m, 700 g',type:'stepper',nm:1.26,kgcm:12.85,mass:700,rot:360,t60:0,dps:600,volts:'24–36 V',gears:'direct',note:'Base joints only — 700 g at a distal joint destroys your payload ratio.'})
+};
+const SGROUPS=[
+ ['Micro servo',['SG90','MG90S','MG92B']],
+ ['Standard servo',['MG995','MG996R']],
+ ['High-torque digital servo',['DS3218','DS3225','DS3230','DS3235','RDS5160']],
+ ['Smart / bus servo',['LX-16A','AX-12A','XL430']],
+ ['Stepper motor',['NEMA14','NEMA17-P','NEMA17','NEMA17-L','NEMA23']],
+ ['Other',['None','Custom']]
+];
+const SK=k=>SERV[k]||SERV.None;
+
+/* ============ STATE ============ */
+const L_=o=>Object.assign({L:150,share:1,mat:'PETG',sec:'Rect Tube',d1:20,d2:30,t:2.5,
+ act:'DS3225',qty:1,hw:15,auto:true,lump:0.08,tq:1,gr:1},o);
 function defaults(){return{
- mode:'load',N:3,fos:3,k:0.65,g:9.81,kd:1.4,eta:0.9,dmax:1.0,payload:0.5,reach:700,
+ mode:'load',N:3,fos:3,k:0.65,g:9.81,kd:1.4,eta:0.9,derate:0.5,dmax:1.0,payload:0.2,
  exag:25,dyn:false,omega:90,ta:0.3,
+ ee:{act:'MG90S',qty:1,struct:45,tool:0,cg:35},
  links:[
-  mkLink(300,1,'PETG','Rect Tube',30,50,3,0.45,0.45,20),
-  mkLink(250,1,'PETG','Rect Tube',25,40,3,0.30,0.45,15),
-  mkLink(150,0.6,'PETG','Solid Square',22,22,0,0.15,0.25,5),
-  mkLink(120,0.5,'PLA','Solid Rod',16,16,0,0.10,0.15,5),
-  mkLink(100,0.4,'PLA','Solid Rod',14,14,0,0.08,0.12,5),
-  mkLink(80,0.3,'PLA','Solid Rod',12,12,0,0.05,0.10,5)]
+  L_({L:150,share:1,  mat:'PETG',sec:'Rect Tube',   d1:20,d2:30,t:2.5,act:'DS3225',qty:2,hw:25}),
+  L_({L:130,share:1,  mat:'PETG',sec:'Rect Tube',   d1:18,d2:26,t:2.5,act:'DS3225',qty:1,hw:18}),
+  L_({L:80, share:0.6,mat:'PETG',sec:'Square Tube', d1:18,d2:18,t:2.5,act:'DS3218',qty:1,hw:12}),
+  L_({L:70, share:0.5,mat:'PLA', sec:'Solid Square',d1:14,d2:14,t:0,  act:'MG996R',qty:1,hw:10}),
+  L_({L:60, share:0.4,mat:'PLA', sec:'Solid Rod',   d1:12,d2:12,t:0,  act:'MG90S', qty:1,hw:8}),
+  L_({L:50, share:0.3,mat:'PLA', sec:'Solid Rod',   d1:10,d2:10,t:0,  act:'MG90S', qty:1,hw:6})]
 };}
 const PRESETS={
- 1:{N:3,fos:3.5,k:0.6,kd:1.5,eta:0.85,dmax:1.5,links:[
-   mkLink(220,1,'PLA','Square Tube',30,30,3,0.35,0.35,15),
-   mkLink(180,1,'PLA','Square Tube',25,25,3,0.25,0.35,12),
-   mkLink(120,0.6,'PLA','Solid Square',18,18,0,0.12,0.2,5)]},
- 2:{N:3,fos:3,k:0.68,kd:1.4,eta:0.9,dmax:1.0,links:[
-   mkLink(320,1,'PETG','Rect Tube',32,55,3.5,0.5,0.9,25),
-   mkLink(260,1,'PETG','Rect Tube',28,45,3,0.35,0.7,20),
-   mkLink(160,0.6,'ASA','Square Tube',24,24,3,0.18,0.3,8)]},
- 3:{N:3,fos:2.5,k:1,kd:1.6,eta:0.9,dmax:0.5,links:[
-   mkLink(450,1,'Steel','Square Tube',30,30,2,0.9,2.2,30),
-   mkLink(380,1,'Steel','Square Tube',25,25,2,0.6,1.6,25),
-   mkLink(200,0.5,'Steel','Hollow Rod',20,20,2,0.3,0.6,10)]}
+ 1:{N:3,fos:3.5,k:0.6,kd:1.5,eta:0.9,derate:0.45,dmax:1.5,payload:0.1,
+  ee:{act:'SG90',qty:1,struct:30,tool:0,cg:28},
+  links:[
+   L_({L:110,share:1,  mat:'PLA',sec:'Square Tube', d1:20,d2:20,t:2.5,act:'MG996R',qty:1,hw:18}),
+   L_({L:95, share:1,  mat:'PLA',sec:'Square Tube', d1:18,d2:18,t:2.5,act:'MG996R',qty:1,hw:14}),
+   L_({L:60, share:0.6,mat:'PLA',sec:'Solid Square',d1:14,d2:14,t:0,  act:'MG90S', qty:1,hw:10})]},
+ 2:{N:3,fos:3,k:0.68,kd:1.4,eta:0.9,derate:0.5,dmax:1.0,payload:0.25,
+  ee:{act:'MG92B',qty:1,struct:55,tool:0,cg:40},
+  links:[
+   L_({L:180,share:1,  mat:'PETG',sec:'Rect Tube',  d1:24,d2:36,t:3,act:'DS3235',qty:2,hw:30}),
+   L_({L:150,share:1,  mat:'PETG',sec:'Rect Tube',  d1:20,d2:30,t:3,act:'DS3225',qty:1,hw:20}),
+   L_({L:90, share:0.6,mat:'ASA', sec:'Square Tube',d1:18,d2:18,t:2.5,act:'DS3218',qty:1,hw:14})]},
+ 3:{N:3,fos:2.5,k:1,kd:1.6,eta:0.85,derate:0.7,dmax:0.5,payload:1,
+  ee:{act:'MG996R',qty:1,struct:120,tool:0,cg:50},
+  links:[
+   L_({L:380,share:1,  mat:'Steel',sec:'Square Tube',d1:30,d2:30,t:2,act:'NEMA23',  qty:1,hw:120,gr:30}),
+   L_({L:300,share:1,  mat:'Steel',sec:'Square Tube',d1:25,d2:25,t:2,act:'NEMA17-L',qty:1,hw:80, gr:25}),
+   L_({L:160,share:0.5,mat:'Steel',sec:'Hollow Rod', d1:20,d2:20,t:2,act:'NEMA17-P',qty:1,hw:50, gr:15})]}
 };
 let S=defaults();
 
+/* ============ COMPONENT MASS INTEGRATION ============ */
+const actUnit=k=>SK(k).mass/1000;                                  /* kg per unit */
+function actMass(i){const o=S.links[i],s=SK(o.act);
+ const n=(s.type==='none'||s.type==='custom')?0:Math.max(1,+o.qty||1);
+ return s.mass*n/1000+(+o.hw||0)/1000;}                            /* actuator(s) + bracket, kg */
+function eeMass(){const e=S.ee,s=SK(e.act);
+ const n=(s.type==='none'||s.type==='custom')?0:Math.max(1,+e.qty||1);
+ return s.mass*n/1000+(+e.struct||0)/1000+(+e.tool||0)/1000;}
+function lumpOf(i){
+ if(!S.links[i].auto)return Math.max(0,+S.links[i].lump||0);
+ return i===S.N-1?eeMass():actMass(i+1);
+}
+function tqUnit(i){const o=S.links[i],s=SK(o.act);
+ return s.type==='custom'?Math.max(0,+o.tq||0):s.nm;}
+function tqJoint(i){const o=S.links[i],s=SK(o.act);
+ const n=(s.type==='none'||s.type==='custom')?1:Math.max(1,+o.qty||1);
+ return tqUnit(i)*(s.type==='none'?0:n);}
+
 /* ============ MECHANICS ============ */
 function sectionProps(sec,d1,d2,t){
- d1=Math.max(0,+d1||0); d2=Math.max(0,+d2||0); t=Math.max(0,+t||0);
- let A=0,I=0,c=0,h=0,bad=false;
- const P4=Math.PI/4,P64=Math.PI/64;
+ d1=Math.max(0,+d1||0);d2=Math.max(0,+d2||0);t=Math.max(0,+t||0);
+ let A=0,I=0,c=0,h=0,bad=false;const P4=Math.PI/4,P64=Math.PI/64;
  if(sec==='Solid Rod'){A=P4*d1*d1;I=P64*d1**4;c=d1/2;h=d1;}
  else if(sec==='Hollow Rod'){const d=Math.max(0,d1-2*t);A=P4*(d1*d1-d*d);I=P64*(d1**4-d**4);c=d1/2;h=d1;bad=2*t>=d1;}
  else if(sec==='Solid Square'){A=d1*d1;I=d1**4/12;c=d1/2;h=d1;}
  else if(sec==='Square Tube'){const b=Math.max(0,d1-2*t);A=d1*d1-b*b;I=(d1**4-b**4)/12;c=d1/2;h=d1;bad=2*t>=d1;}
  else if(sec==='Rectangle'){A=d1*d2;I=d1*d2**3/12;c=d2/2;h=d2;}
  else if(sec==='Rect Tube'){const b=Math.max(0,d1-2*t),hh=Math.max(0,d2-2*t);
-   A=d1*d2-b*hh;I=(d1*d2**3-b*hh**3)/12;c=d2/2;h=d2;bad=2*t>=Math.min(d1,d2);}
+  A=d1*d2-b*hh;I=(d1*d2**3-b*hh**3)/12;c=d2/2;h=d2;bad=2*t>=Math.min(d1,d2);}
  return{A,I,c,Z:c>0?I/c:0,h,bad};
 }
 function buildModel(L){
- const N=S.N,lk=S.links,m=[],A=[],I=[],Z=[],h=[],E=[],sy=[],rho=[],bad=[];
+ const N=S.N,m=[],A=[],I=[],Z=[],h=[],E=[],sy=[],rho=[],bad=[],lump=[];
  for(let i=0;i<N;i++){
-  const o=lk[i],p=sectionProps(o.sec,o.d1,o.d2,o.t),M=MATS[o.mat]||MATS.PLA;
+  const o=S.links[i],p=sectionProps(o.sec,o.d1,o.d2,o.t),MT=MATS[o.mat]||MATS.PLA;
   A[i]=p.A;I[i]=p.I;Z[i]=p.Z;h[i]=p.h;bad[i]=p.bad;
-  rho[i]=M.rho;sy[i]=M.sy;E[i]=M.E;
-  m[i]=A[i]*Math.max(0,L[i])*1e-9*M.rho;
+  rho[i]=MT.rho;sy[i]=MT.sy;E[i]=MT.E;
+  m[i]=A[i]*Math.max(0,L[i])*1e-9*MT.rho;
+  lump[i]=lumpOf(i);
  }
  const reach=new Array(N+1).fill(0);
  for(let i=N-1;i>=0;i--)reach[i]=reach[i+1]+Math.max(0,L[i]);
+ const cg=Math.max(0,+S.ee.cg||0);
+ const arm=reach.map(r=>r+cg);
  const sig=new Array(N+1).fill(0);
  for(let i=0;i<N;i++){let s=0;
-  for(let j=i;j<N;j++){const d=reach[i]-reach[j];s+=m[j]*(d+L[j]/2)+(+lk[j].lump||0)*(d+L[j]);}
+  for(let j=i;j<N;j++){const d=reach[i]-reach[j];s+=m[j]*(d+L[j]/2)+lump[j]*(d+L[j]);}
   sig[i]=s;}
  const sall=[],V=[],W=[],X=[];
  for(let i=0;i<N;i++){
-  sall[i]=sy[i]*S.k/S.fos; V[i]=Z[i]*sall[i];
-  W[i]=(+lk[i].tq||0)*(+lk[i].gr||0)*S.eta*1000; X[i]=Math.min(V[i],W[i]);
+  sall[i]=sy[i]*S.k/S.fos;V[i]=Z[i]*sall[i];
+  W[i]=tqJoint(i)*S.derate*Math.max(0,+S.links[i].gr||0)*S.eta*1000;
+  X[i]=Math.min(V[i],W[i]);
  }
- let mass=0;for(let i=0;i<N;i++)mass+=m[i]+(+lk[i].lump||0);
- return{N,L,m,A,I,Z,h,E,sy,rho,bad,reach,sig,sall,V,W,X,mass};
+ let struct=0,lsum=0;
+ for(let i=0;i<N;i++){struct+=m[i];lsum+=lump[i];}
+ return{N,L,m,A,I,Z,h,E,sy,rho,bad,lump,reach,arm,cg,sig,sall,V,W,X,
+  struct,lsum,mass:struct+lsum};
 }
-const demand=(M,i,P)=>S.kd*S.g*(P*M.reach[i]+M.sig[i]);
+const demand=(M,i,P)=>S.kd*S.g*(P*M.arm[i]+M.sig[i]);
 function utilArr(M,P){const u=[];for(let i=0;i<M.N;i++){const d=demand(M,i,P);
  u.push({d,us:M.V[i]>0?d/M.V[i]:9,ut:M.W[i]>0?d/M.W[i]:9});}return u;}
 function deflection(M,P){
- const N=M.N,lk=S.links,th=[],de=[],F=[],Me=[],w=[];
+ const N=M.N,th=[],de=[],F=[],Me=[],w=[];
  for(let i=0;i<N;i++){
-  let distal=0;for(let j=i+1;j<N;j++)distal+=M.m[j]+(+lk[j].lump||0);
-  F[i]=S.kd*S.g*(P+(+lk[i].lump||0)+distal);
-  Me[i]=S.kd*S.g*(P*M.reach[i+1]+M.sig[i+1]);
+  let distal=0;for(let j=i+1;j<N;j++)distal+=M.m[j]+M.lump[j];
+  F[i]=S.kd*S.g*(P+M.lump[i]+distal);
+  Me[i]=S.kd*S.g*(P*M.arm[i+1]+M.sig[i+1]);
   w[i]=M.L[i]>0?S.kd*S.g*M.m[i]/M.L[i]:0;
   const EI=M.E[i]*M.I[i],Li=Math.max(0,M.L[i]);
   if(EI>0){th[i]=(F[i]*Li**2/2+Me[i]*Li+w[i]*Li**3/6)/EI;
@@ -275,8 +365,8 @@ function deflection(M,P){
 function strengthPayload(M){
  let best=Infinity,idx=0;
  for(let i=0;i<M.N;i++){
-  if(M.reach[i]<=0)continue;
-  const p=Math.max(0,(M.X[i]/(S.kd*S.g)-M.sig[i])/M.reach[i]);
+  if(M.arm[i]<=0)continue;
+  const p=Math.max(0,(M.X[i]/(S.kd*S.g)-M.sig[i])/M.arm[i]);
   if(p<best){best=p;idx=i;}
  }
  return{p:isFinite(best)?best:0,idx};
@@ -297,37 +387,36 @@ const sharesTo=R=>{const sh=S.links.slice(0,S.N).map(l=>Math.max(0.001,+l.share|
 function solveReach(){
  const f=R=>worstUtil(buildModel(sharesTo(R)),S.payload)-1;
  if(f(5)>0)return{R:null,why:'infeasible'};
- let lo=5,hi=5;let n=0;
+ let lo=5,hi=5,n=0;
  while(f(hi)<0&&hi<30000&&n++<40)hi*=1.6;
  if(f(hi)<0)return{R:hi,why:'capped'};
  for(let i=0;i<80;i++){const md=(lo+hi)/2;f(md)<0?lo=md:hi=md;}
  return{R:lo,why:'ok'};
 }
 function dynamics(M,P){
- const al=(S.omega*Math.PI/180)/Math.max(0.01,S.ta),lk=S.links,out=[];
+ const al=(S.omega*Math.PI/180)/Math.max(0.01,S.ta),out=[];
  for(let i=0;i<M.N;i++){
-  let J=P*M.reach[i]**2;
+  let J=P*M.arm[i]**2;
   for(let j=i;j<M.N;j++){
-   const dcg=M.reach[i]-M.reach[j]+M.L[j]/2, dl=M.reach[i]-M.reach[j]+M.L[j];
-   J+=M.m[j]*(M.L[j]**2/12+dcg*dcg)+(+lk[j].lump||0)*dl*dl;
+   const dcg=M.reach[i]-M.reach[j]+M.L[j]/2,dl=M.reach[i]-M.reach[j]+M.L[j];
+   J+=M.m[j]*(M.L[j]**2/12+dcg*dcg)+M.lump[j]*dl*dl;
   }
   J/=1e6;
-  const Tg=S.g*(P*M.reach[i]+M.sig[i])/1000, Ta=J*al;
+  const Tg=S.g*(P*M.arm[i]+M.sig[i])/1000,Ta=J*al;
   out.push({J,Tg,Ta,Treq:Tg+Ta,avail:M.W[i]/1000,al});
  }
  return out;
 }
 const fn=(M,i)=>M.m[i]>0&&M.L[i]>0?(1/(2*Math.PI))*Math.sqrt(3*M.E[i]*1e6*M.I[i]*1e-12/(M.m[i]*(M.L[i]/1000)**3)):0;
 
-/* ============ UI BUILD ============ */
+/* ============ UI HELPERS ============ */
 const $=s=>document.querySelector(s);
 const fmt=(v,d=2)=>!isFinite(v)?'—':(Math.abs(v)>=1000?v.toFixed(0):v.toFixed(d));
 const uc=u=>u>0.9?'v-bd':u>0.6?'v-wn':'v-ok';
 const ucol=u=>u>0.9?'#f85149':u>0.6?'#d29922':'#3fb950';
-
 function nrow(scope,i,k,label,unit,min,max,step){
- const v=scope==='g'?S[k]:S.links[i][k];
- const at=scope==='g'?`data-g="${k}"`:`data-i="${i}" data-k="${k}"`;
+ const v=scope==='g'?S[k]:(scope==='e'?S.ee[k]:S.links[i][k]);
+ const at=scope==='g'?`data-g="${k}"`:(scope==='e'?`data-e="${k}"`:`data-i="${i}" data-k="${k}"`);
  return `<label class="nr"><span>${label}<em>${unit}</em></span>
  <input type="range" ${at} min="${min}" max="${max}" step="${step}" value="${v}">
  <input type="number" ${at} min="${min}" max="${max}" step="${step}" value="${v}"></label>`;
@@ -336,11 +425,27 @@ function selrow(i,k,label,opts){
  return `<label class="nr full"><span>${label}</span>
  <select data-i="${i}" data-k="${k}">${opts.map(o=>`<option${S.links[i][k]===o?' selected':''}>${o}</option>`).join('')}</select></label>`;
 }
+function actOptions(cur){
+ return SGROUPS.map(([g,ks])=>`<optgroup label="${g}">`+ks.map(k=>
+  `<option value="${k}"${cur===k?' selected':''}>${SERV[k].label}</option>`).join('')+'</optgroup>').join('');
+}
+function specBox(k,qty,extraG,extraLbl){
+ const s=SK(k);
+ if(s.type==='none')return `<div class="spec">No actuator — this joint has <b>zero</b> torque capacity.</div>`;
+ if(s.type==='custom')return `<div class="spec">Custom actuator — torque from the manual field, mass from <b>${extraLbl}</b>.</div>`;
+ const n=Math.max(1,+qty||1);
+ return `<div class="spec">
+  Rated <b>${s.kgcm?fmt(s.kgcm,1)+' kg·cm':''}${s.kgcm?' = ':''}${fmt(s.nm,2)} N·m</b> @ ${s.volts}${n>1?` × ${n} = <b>${fmt(s.nm*n,2)} N·m</b>`:''}<br>
+  Mass <b>${fmt(s.mass,1)} g</b>${n>1?` × ${n} = <b>${fmt(s.mass*n,0)} g</b>`:''} + ${extraLbl} <b>${fmt(extraG,0)} g</b><br>
+  Rotation <b>${s.rot?s.rot+'°':'continuous'}</b> · ${s.dps?'no-load <b>'+s.dps+' °/s</b>':'driver-dependent speed'} · ${s.gears} gears<br>
+  <span style="color:#6e7b8a">${s.note}</span></div>`;
+}
 function buildGlobals(){
  $('#globals').innerHTML=
   `<label class="nr full"><span>Number of links / joints</span>
    <select data-g="N">${[1,2,3,4,5,6].map(n=>`<option value="${n}"${S.N===n?' selected':''}>${n}</option>`).join('')}</select></label>`
  +nrow('g',0,'payload','Payload at tip <b>(input in mode ②)</b>','kg',0,20,0.05)
+ +nrow('g',0,'derate','Actuator torque derate vs rated','–',0.2,1,0.05)
  +nrow('g',0,'fos','Factor of safety','–',1,6,0.1)
  +nrow('g',0,'k','Print knockdown k','–',0.3,1,0.05)
  +nrow('g',0,'kd','Dynamic amplification K<sub>d</sub>','–',1,2.5,0.05)
@@ -348,28 +453,48 @@ function buildGlobals(){
  +nrow('g',0,'dmax','Max allowable tip deflection','mm',0.1,25,0.1)
  +nrow('g',0,'g','Gravity g','m/s²',9,10,0.01)
  +`<label class="nr full"><span>Droop exaggeration in diagram</span>
-   <select data-g="exag">${[1,5,10,25,50,100].map(n=>`<option value="${n}"${S.exag===n?' selected':''}>×${n}</option>`).join('')}</select></label>`;
+   <select data-g="exag">${[1,5,10,25,50,100].map(n=>`<option value="${n}"${S.exag===n?' selected':''}>×${n}</option>`).join('')}</select></label>`
+ +`<p class="hint"><b>Derate</b> is the fraction of the rated figure you are willing to use: 0.4–0.5 for hobby servo <i>stall</i> torque, 0.6–0.8 for stepper <i>holding</i> torque.</p>`;
  $('#dyn').innerHTML=nrow('g',0,'omega','Target joint speed ω','°/s',10,360,10)
   +nrow('g',0,'ta','Acceleration time t<sub>a</sub>','s',0.05,2,0.05);
  $('#dynOn').checked=S.dyn;
 }
+function buildEE(){
+ $('#ee').innerHTML=
+  `<label class="nr full"><span>Gripper / tool actuator</span>
+   <select data-e="act">${actOptions(S.ee.act)}</select></label>`
+ +nrow('e',0,'qty','Number of actuators','×',1,4,1)
+ +nrow('e',0,'struct','Gripper structure mass (printed body, jaws, linkage)','g',0,600,5)
+ +nrow('e',0,'tool','Extra tooling mass (camera, sensor, suction, magnet)','g',0,1000,5)
+ +nrow('e',0,'cg','Payload CoG offset beyond flange','mm',0,250,5);
+}
 function buildLinks(){
  let h='';
  for(let i=0;i<6;i++){
-  const o=S.links[i];
+  const o=S.links[i],s=SK(o.act),cust=s.type==='custom';
+  const hwLbl=cust?'Actuator + bracket mass':'Bracket + fastener mass';
   h+=`<div class="lc" id="card${i}">
    <div class="lch"><b>Link ${i+1}<small>${i===0?' · base':''}</small></b><span class="lcl" id="len${i}"></span></div>
    <div class="lcb"><div class="g">
-    ${selrow(i,'mat','Material',Object.keys(MATS))}
+    <label class="nr full"><span>Actuator at joint J${i+1}</span>
+     <select data-i="${i}" data-k="act">${actOptions(o.act)}</select></label>
+    ${nrow('l',i,'qty','Actuators at this joint','×',1,4,1)}
+    ${nrow('l',i,'tq','Custom actuator rated torque','N·m',0.02,30,0.02)}
+    ${nrow('l',i,'gr','External gear / belt ratio','：1',1,120,1)}
+    ${nrow('l',i,'hw',hwLbl,'g',0,900,1)}
+    <div class="spec" id="aspec${i}"></div>
+    <div class="sub"></div>
+    ${selrow(i,'mat','Link material',Object.keys(MATS))}
     ${selrow(i,'sec','Cross-section',SECS)}
     ${nrow('l',i,'L','Length L <b>(input in mode ①)</b>','mm',0,900,5)}
     ${nrow('l',i,'share','Length share <b>(mode ②)</b>','–',0.1,3,0.05)}
     ${nrow('l',i,'d1',ROUND(o.sec)?'Outside diameter D':'Width b','mm',4,140,1)}
     ${nrow('l',i,'d2','Height h (bending plane)','mm',4,140,1)}
     ${nrow('l',i,'t','Wall thickness t','mm',0,25,0.5)}
-    ${nrow('l',i,'lump','Lumped mass at distal end','kg',0,8,0.05)}
-    ${nrow('l',i,'tq','Motor peak torque','N·m',0.02,30,0.02)}
-    ${nrow('l',i,'gr','Gear ratio','：1',1,120,1)}
+    <div class="sub"></div>
+    <label class="ck"><input type="checkbox" data-i="${i}" data-k="auto"${o.auto?' checked':''}>
+      Auto distal mass from components <span id="lauto${i}" style="margin-left:auto;font-family:var(--mono);color:var(--ac)"></span></label>
+    ${nrow('l',i,'lump','Manual distal lumped mass','kg',0,8,0.01)}
    </div>
    <div class="secbox"><svg id="sec${i}" viewBox="0 0 110 86"></svg><div id="cap${i}"></div></div>
    </div></div>`;
@@ -398,69 +523,83 @@ function drawSections(M){
       <text x="96" y="${cy+3}" class="lbl" font-size="8">NA</text>`;
   document.getElementById('sec'+i).innerHTML=g;
   document.getElementById('cap'+i).innerHTML=
-   `I = ${M.I[i].toExponential(2)} mm⁴<br>Z = ${fmt(M.Z[i],0)} mm³<br>${fmt(M.m[i]*1000,0)} g`
+   `I = ${M.I[i].toExponential(2)} mm⁴<br>Z = ${fmt(M.Z[i],0)} mm³<br>link ${fmt(M.m[i]*1000,0)} g`
    +(M.bad[i]?'<br><span style="color:#f85149">wall too thick</span>':'');
  }
 }
+function arcPath(cx,cy,r,a0,a1){
+ const p=a=>[cx+r*Math.cos(a*Math.PI/180),cy+r*Math.sin(a*Math.PI/180)];
+ const[x0,y0]=p(a0),[x1,y1]=p(a1),lg=Math.abs(a1-a0)>180?1:0;
+ return `M${x0.toFixed(1)},${y0.toFixed(1)} A${r},${r} 0 ${lg} 1 ${x1.toFixed(1)},${y1.toFixed(1)}`;
+}
 function drawArm(M,P,def,u){
- const N=M.N,R=M.reach[0],bx=78,by=140,avail=840;
- const sc=R>0?avail/R:1, ex=+S.exag;
+ const N=M.N,R=M.reach[0],cg=M.cg,bx=84,by=150,avail=790;
+ const span=R+cg+30,sc=span>0?avail/span:1,ex=+S.exag;
  let g='';
- // base
- g+=`<rect x="${bx-30}" y="${by-58}" width="30" height="116" fill="#1c2330" stroke="#30363d"/>`;
- for(let k=0;k<7;k++)g+=`<line x1="${bx-30}" y1="${by-54+k*18}" x2="${bx-42}" y2="${by-42+k*18}" stroke="#9aa7b4"/>`;
- // undeflected axis + deflection budget line
+ g+=`<rect x="${bx-32}" y="${by-60}" width="32" height="120" fill="#1c2330" stroke="#30363d"/>`;
+ for(let k=0;k<7;k++)g+=`<line x1="${bx-32}" y1="${by-56+k*19}" x2="${bx-45}" y2="${by-43+k*19}" stroke="#9aa7b4"/>`;
  g+=`<line x1="${bx}" y1="${by}" x2="${bx+R*sc}" y2="${by}" stroke="#30363d" stroke-width="1.5" stroke-dasharray="7 5"/>`;
  const budY=by+S.dmax*sc*ex;
- if(budY-by<170)g+=`<line x1="${bx}" y1="${budY}" x2="${bx+R*sc}" y2="${budY}" stroke="#8957e5" stroke-width="1" stroke-dasharray="3 4"/>
-  <text x="${bx+R*sc+6}" y="${budY+4}" class="lbl" fill="#8957e5">budget</text>`;
- // links
- let x=bx,y=by,sl=0;
- const jx=[],jy=[];
+ if(budY-by<170)g+=`<line x1="${bx}" y1="${budY}" x2="${bx+(R+cg)*sc}" y2="${budY}" stroke="#8957e5" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="${bx+(R+cg)*sc+5}" y="${budY+4}" class="sml" fill="#8957e5">budget</text>`;
+ let x=bx,y=by,sl=0;const jx=[],jy=[];
  for(let i=0;i<N;i++){
-  const Lp=M.L[i]*sc, s0=sl, s1=sl+def.th[i];
-  const yEnd=y+(sl*M.L[i]+def.de[i])*sc*ex, xEnd=x+Lp;
-  const c1x=x+Lp/3, c1y=y+(Lp/3)*s0*ex, c2x=xEnd-Lp/3, c2y=yEnd-(Lp/3)*s1*ex;
-  const th=Math.min(58,Math.max(4,M.h[i]*sc));
+  const Lp=M.L[i]*sc,s0=sl,s1=sl+def.th[i];
+  const yEnd=y+(sl*M.L[i]+def.de[i])*sc*ex,xEnd=x+Lp;
+  const c1x=x+Lp/3,c1y=y+(Lp/3)*s0*ex,c2x=xEnd-Lp/3,c2y=yEnd-(Lp/3)*s1*ex;
+  const th=Math.min(54,Math.max(4,M.h[i]*sc));
   const col=ucol(Math.max(u[i].us,u[i].ut));
   g+=`<path d="M${x},${y} C${c1x},${c1y} ${c2x},${c2y} ${xEnd},${yEnd}" fill="none"
-      stroke="${col}" stroke-width="${th}" stroke-linecap="round" opacity=".32"/>`;
-  g+=`<path d="M${x},${y} C${c1x},${c1y} ${c2x},${c2y} ${xEnd},${yEnd}" fill="none"
+      stroke="${col}" stroke-width="${th}" stroke-linecap="round" opacity=".3"/>
+      <path d="M${x},${y} C${c1x},${c1y} ${c2x},${c2y} ${xEnd},${yEnd}" fill="none"
       stroke="${col}" stroke-width="2.4"/>`;
-  if(Lp>58)g+=`<text x="${x+Lp/2}" y="${by-th/2-16}" text-anchor="middle" font-size="11">L${i+1} = ${fmt(M.L[i],0)} mm</text>
-   <text x="${x+Lp/2}" y="${by-th/2-4}" text-anchor="middle" class="lbl">${S.links[i].mat} · ${S.links[i].sec}</text>`;
-  jx.push(x);jy.push(y);
-  x=xEnd;y=yEnd;sl=s1;
+  if(Lp>60)g+=`<text x="${x+Lp/2}" y="${by-th/2-17}" text-anchor="middle" font-size="11">L${i+1} = ${fmt(M.L[i],0)} mm</text>
+   <text x="${x+Lp/2}" y="${by-th/2-5}" text-anchor="middle" class="sml">${S.links[i].mat} · ${S.links[i].sec} · ${fmt(M.m[i]*1000,0)} g</text>`;
+  if(i<N-1&&M.lump[i]>0&&Lp>34){
+   const bw=Math.min(26,9+Math.cbrt(M.lump[i]*1000)*2.1);
+   g+=`<rect x="${xEnd-bw/2}" y="${yEnd-bw/2}" width="${bw}" height="${bw}" rx="3"
+        fill="#8957e533" stroke="#8957e5" stroke-width="1.4"/>
+       <text x="${xEnd}" y="${yEnd+bw/2+13}" text-anchor="middle" class="sml" fill="#8957e5">${fmt(M.lump[i]*1000,0)} g</text>`;
+  }
+  jx.push(x);jy.push(y);x=xEnd;y=yEnd;sl=s1;
  }
- // joints
  for(let i=0;i<N;i++){
-  const r=Math.min(15,Math.max(7,5+Math.cbrt(Math.max(.02,S.links[i].tq*S.links[i].gr))*2));
+  const o=S.links[i],s=SK(o.act);
+  const r=Math.min(16,Math.max(7,5+Math.cbrt(Math.max(.02,tqJoint(i)*Math.max(1,o.gr)))*2.3));
+  if(s.rot>0&&s.rot<360)g+=`<path d="${arcPath(jx[i],jy[i],r+6,-s.rot/2,s.rot/2)}" fill="none" stroke="#58a6ff" stroke-width="1.2" opacity=".65"/>`;
+  else if(s.rot>=360)g+=`<circle cx="${jx[i]}" cy="${jy[i]}" r="${r+6}" fill="none" stroke="#58a6ff" stroke-width="1.2" stroke-dasharray="2 3" opacity=".65"/>`;
   g+=`<circle cx="${jx[i]}" cy="${jy[i]}" r="${r}" fill="#0d1117" stroke="#58a6ff" stroke-width="2.4"/>
-      <text x="${jx[i]}" y="${jy[i]+r+15}" text-anchor="middle" class="lbl">J${i+1}</text>`;
+      <text x="${jx[i]}" y="${jy[i]+r+16}" text-anchor="middle" class="lbl">J${i+1}</text>
+      <text x="${jx[i]}" y="${jy[i]+r+27}" text-anchor="middle" class="sml">${o.act==='Custom'?'custom':o.act}${(SK(o.act).type!=='none'&&SK(o.act).type!=='custom'&&o.qty>1)?'×'+o.qty:''}${o.gr>1?' '+o.gr+':1':''}</text>`;
  }
- // payload
- const pz=Math.min(34,10+Math.cbrt(Math.max(.01,P))*16);
- g+=`<rect x="${x}" y="${y-pz/2}" width="${pz*1.3}" height="${pz}" rx="4" fill="#1f6feb33" stroke="#58a6ff" stroke-width="2"/>
-     <text x="${x+pz*0.65}" y="${y+pz/2+16}" text-anchor="middle" class="lbl">${fmt(P,2)} kg</text>`;
- // droop arrow
- if(y-by>3)g+=`<line x1="${x-14}" y1="${by}" x2="${x-14}" y2="${y}" stroke="#f85149" stroke-width="1.5" marker-end="url(#a1)"/>
-   <text x="${x-20}" y="${(by+y)/2}" text-anchor="end" fill="#f85149" font-size="11">δ ${fmt(def.dtip,2)} mm</text>`;
- // reach dimension
- g+=`<line x1="${bx}" y1="300" x2="${bx+R*sc}" y2="300" class="dim" marker-start="url(#a2)" marker-end="url(#a1b)"/>
-  <line x1="${bx}" y1="${by+20}" x2="${bx}" y2="300" class="dim"/>
-  <line x1="${bx+R*sc}" y1="${y+24}" x2="${bx+R*sc}" y2="300" class="dim"/>
-  <text x="${bx+R*sc/2}" y="294" text-anchor="middle" class="lbl">total reach ${fmt(R,0)} mm</text>`;
+ /* end effector: body + jaws */
+ const em=eeMass(),ez=Math.min(26,11+Math.cbrt(Math.max(.01,em))*17);
+ g+=`<rect x="${x}" y="${y-ez/2}" width="${ez*0.75}" height="${ez}" rx="3" fill="#8957e533" stroke="#8957e5" stroke-width="1.8"/>
+  <path d="M${x+ez*0.75},${y-ez/2} L${x+ez*1.5},${y-ez*0.62} L${x+ez*1.5},${y-ez*0.3} L${x+ez*0.75},${y-ez*0.14} Z" fill="#8957e533" stroke="#8957e5" stroke-width="1.5"/>
+  <path d="M${x+ez*0.75},${y+ez/2} L${x+ez*1.5},${y+ez*0.62} L${x+ez*1.5},${y+ez*0.3} L${x+ez*0.75},${y+ez*0.14} Z" fill="#8957e533" stroke="#8957e5" stroke-width="1.5"/>
+  <text x="${x+ez*0.6}" y="${y-ez/2-7}" text-anchor="middle" class="sml" fill="#8957e5">EE ${fmt(em*1000,0)} g</text>`;
+ /* payload at cg offset */
+ const px=x+cg*sc,pz=Math.min(32,10+Math.cbrt(Math.max(.01,P))*16);
+ g+=`<rect x="${px}" y="${y-pz/2}" width="${pz*1.25}" height="${pz}" rx="4" fill="#1f6feb33" stroke="#58a6ff" stroke-width="2"/>
+  <text x="${px+pz*0.62}" y="${y+pz/2+15}" text-anchor="middle" class="lbl">${fmt(P,2)} kg</text>`;
+ if(cg>0)g+=`<line x1="${x}" y1="${y-pz/2-16}" x2="${px}" y2="${y-pz/2-16}" class="dim" marker-start="url(#a2)" marker-end="url(#a1b)"/>
+  <text x="${(x+px)/2}" y="${y-pz/2-20}" text-anchor="middle" class="sml">cg ${fmt(cg,0)}</text>`;
+ if(y-by>3)g+=`<line x1="${x-16}" y1="${by}" x2="${x-16}" y2="${y}" stroke="#f85149" stroke-width="1.5" marker-end="url(#a1)"/>
+   <text x="${x-22}" y="${(by+y)/2}" text-anchor="end" fill="#f85149" font-size="11">δ ${fmt(def.dtip,2)} mm</text>`;
+ g+=`<line x1="${bx}" y1="322" x2="${bx+R*sc}" y2="322" class="dim" marker-start="url(#a2)" marker-end="url(#a1b)"/>
+  <line x1="${bx}" y1="${by+22}" x2="${bx}" y2="322" class="dim"/>
+  <line x1="${bx+R*sc}" y1="${y+30}" x2="${bx+R*sc}" y2="322" class="dim"/>
+  <text x="${bx+R*sc/2}" y="316" text-anchor="middle" class="lbl">total reach ${fmt(R,0)} mm</text>`;
  $('#arm').innerHTML=`<defs>
   <marker id="a1" markerWidth="8" markerHeight="8" refX="4" refY="7" orient="auto"><path d="M0,0 L8,0 L4,8 z" fill="#f85149"/></marker>
   <marker id="a1b" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#30363d"/></marker>
   <marker id="a2" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto"><path d="M8,0 L0,4 L8,8 z" fill="#30363d"/></marker>
  </defs>`+g;
- $('#armCap').textContent=`Worst-case pose, drawn to scale horizontally and in section height. Droop shown ×${S.exag} (true droop ${fmt(def.dtip,2)} mm). Link colour = worst of bending/torque utilisation.`;
+ $('#armCap').textContent=`Worst-case pose, drawn to scale horizontally and in section height. Purple squares are component masses (actuators + brackets); the gripper and payload sit at the tip with a ${fmt(cg,0)} mm CoG offset. Droop shown ×${S.exag} (true droop ${fmt(def.dtip,2)} mm). Link colour = worst of bending/torque utilisation.`;
 }
 
 /* ============ MAIN UPDATE ============ */
 function update(){
- // lengths
  let M,solved=null,note='';
  if(S.mode==='load'){M=buildModel(S.links.slice(0,S.N).map(l=>Math.max(0,+l.L||0)));}
  else{
@@ -469,142 +608,218 @@ function update(){
   else{M=buildModel(sharesTo(solved.R));if(solved.why==='capped')note='capped';}
   for(let i=0;i<S.N;i++)S.links[i].L=M.L[i];
  }
- // payload in use
- const sp=strengthPayload(M), dp=deflPayload(M);
+ const sp=strengthPayload(M),dp=deflPayload(M);
  const P=S.mode==='load'?Math.min(sp.p,dp):S.payload;
- const u=utilArr(M,P), def=deflection(M,P), dyn=S.dyn?dynamics(M,P):null;
+ const u=utilArr(M,P),def=deflection(M,P),dyn=S.dyn?dynamics(M,P):null;
  const wu=worstUtil(M,P);
 
- // headers / labels
+ /* card headers, spec boxes, visibility */
  $('#chipN').textContent=S.N+(S.N===1?' link':' links');
+ $('#chipEE').textContent=fmt(eeMass()*1000,0)+' g';
  for(let i=0;i<6;i++){
   const c=document.getElementById('card'+i);
   c.style.display=i<S.N?'':'none';
   if(i<S.N){
-   const mx=Math.max(u[i].us,u[i].ut);
+   const mx=Math.max(u[i].us,u[i].ut),o=S.links[i],cust=SK(o.act).type==='custom';
    document.getElementById('len'+i).innerHTML=
     `${fmt(M.L[i],0)} mm · <span class="${uc(mx)}">util ${fmt(mx,2)}</span>`;
+   document.getElementById('aspec'+i).outerHTML=
+    specBox(o.act,o.qty,+o.hw||0,cust?'actuator + bracket':'bracket').replace('class="spec"','class="spec" id="aspec'+i+'"');
+   document.getElementById('lauto'+i).textContent=
+    (o.auto?(i===S.N-1?'EE ':'J'+(i+2)+' '):'manual ')+fmt(M.lump[i]*1000,0)+' g';
   }
  }
- // enable/disable by mode
+ $('#eeSpec').outerHTML=specBox(S.ee.act,S.ee.qty,(+S.ee.struct||0)+(+S.ee.tool||0),'structure + tooling')
+  .replace('class="spec"','class="spec" id="eeSpec" style="margin-top:.55rem"');
+
+ /* enable / disable */
  document.querySelectorAll('[data-k="L"]').forEach(e=>e.disabled=S.mode!=='load');
  document.querySelectorAll('[data-k="share"]').forEach(e=>e.disabled=S.mode!=='lengths');
  document.querySelectorAll('[data-g="payload"]').forEach(e=>e.disabled=S.mode!=='lengths');
- document.querySelectorAll('[data-k="d2"]').forEach((e,i)=>{});
  for(let i=0;i<S.N;i++){
-  const isR=RECT(S.links[i].sec),isH=HOLLOW(S.links[i].sec);
-  document.querySelectorAll(`[data-i="${i}"][data-k="d2"]`).forEach(e=>e.disabled=!isR);
-  document.querySelectorAll(`[data-i="${i}"][data-k="t"]`).forEach(e=>e.disabled=!isH);
+  const o=S.links[i],s=SK(o.act),isR=RECT(o.sec),isH=HOLLOW(o.sec);
+  const q=s.type!=='none'&&s.type!=='custom';
+  const dis=(k,v)=>document.querySelectorAll(`[data-i="${i}"][data-k="${k}"]`).forEach(e=>e.disabled=v);
+  dis('d2',!isR);dis('t',!isH);dis('qty',!q);dis('tq',s.type!=='custom');
+  dis('lump',o.auto);dis('gr',s.type==='none');
  }
+ {const q=SK(S.ee.act).type!=='none'&&SK(S.ee.act).type!=='custom';
+  document.querySelectorAll('[data-e="qty"]').forEach(e=>e.disabled=!q);}
  if(S.mode==='lengths')document.querySelectorAll('[data-k="L"]').forEach(e=>{
   const i=+e.dataset.i;if(i<S.N)e.value=Math.round(M.L[i]);});
 
- // KPIs
+ /* KPIs */
  let kp='';
  if(S.mode==='load'){
   kp+=`<div class="kpi hero"><span>Practical payload</span><b>${fmt(P,2)} kg</b><i>lesser of the two below</i></div>
-   <div class="kpi"><span>Strength / torque limit</span><b class="${dp<sp.p?'':'v-wn'}">${fmt(sp.p,2)} kg</b><i>joint J${sp.idx+1} · ${M.V[sp.idx]<M.W[sp.idx]?'bending':'motor torque'}</i></div>
+   <div class="kpi"><span>Strength / torque limit</span><b class="${dp<sp.p?'':'v-wn'}">${fmt(sp.p,2)} kg</b><i>joint J${sp.idx+1} · ${M.V[sp.idx]<M.W[sp.idx]?'bending':'actuator torque'}</i></div>
    <div class="kpi"><span>Deflection limit</span><b class="${dp<sp.p?'v-wn':''}">${fmt(dp,2)} kg</b><i>at δ ≤ ${fmt(S.dmax,2)} mm</i></div>`;
  }else{
   kp+=`<div class="kpi hero"><span>Max total reach</span><b>${solved&&solved.R!==null?fmt(M.reach[0],0)+' mm':'—'}</b><i>for ${fmt(S.payload,2)} kg payload</i></div>`;
   for(let i=0;i<S.N;i++)kp+=`<div class="kpi"><span>Max L${i+1}</span><b>${fmt(M.L[i],0)}<i> mm</i></b><i>share ${fmt(S.links[i].share,2)}</i></div>`;
  }
  kp+=`<div class="kpi"><span>Tip deflection</span><b class="${def.dtip>S.dmax?'v-bd':def.dtip>0.7*S.dmax?'v-wn':'v-ok'}">${fmt(def.dtip,2)}<i> mm</i></b><i>budget ${fmt(S.dmax,2)} mm</i></div>
-  <div class="kpi"><span>Arm mass</span><b>${fmt(M.mass,2)}<i> kg</i></b><i>ratio ${fmt(P/Math.max(1e-9,M.mass),2)}:1</i></div>
+  <div class="kpi"><span>Arm mass (loaded)</span><b>${fmt(M.mass,2)}<i> kg</i></b><i>ratio ${fmt(P/Math.max(1e-9,M.mass),2)}:1</i></div>
   <div class="kpi"><span>Worst utilisation</span><b class="${uc(wu)}">${fmt(wu,2)}</b><i>1.00 = at the limit</i></div>
   <div class="kpi"><span>Lowest natural freq.</span><b>${fmt(Math.min(...Array.from({length:S.N},(_,i)=>fn(M,i))),1)}<i> Hz</i></b><i>per-link estimate</i></div>`;
  $('#kpis').innerHTML=kp;
 
- // verdict
+ /* verdict */
  let v='',bindJ=0,bindMode='';
  {let worst=-1;for(let i=0;i<S.N;i++){const mx=Math.max(u[i].us,u[i].ut);if(mx>worst){worst=mx;bindJ=i;}}
-  const dU=def.dtip/S.dmax;
-  bindMode=dU>=worst?'Deflection':(u[bindJ].us>u[bindJ].ut?'Material (bending)':'Motor torque');}
- if(note==='infeasible')v=`<span class="chip bd">Infeasible</span> Even a minimal arm cannot carry ${fmt(S.payload,2)} kg with these sections and motors. Increase gearing, section height, or reduce the payload.`;
- else if(note==='capped')v=`<span class="chip wn">Reach capped</span> No constraint binds below 30 m of reach — your inputs are likely unrealistic (check motor torque and section size).`;
+  const dU=S.dmax>0?def.dtip/S.dmax:9;
+  bindMode=dU>=worst?'Deflection':(u[bindJ].us>u[bindJ].ut?'Material (bending)':'Actuator torque');}
+ if(note==='infeasible')v=`<span class="chip bd">Infeasible</span> Even a minimal arm cannot carry ${fmt(S.payload,2)} kg with these actuators and sections. Add gearing, choose a stronger servo, stiffen the sections, or reduce the payload.`;
+ else if(note==='capped')v=`<span class="chip wn">Reach capped</span> No constraint binds below 30 m of reach — check the actuator torque and section inputs.`;
  else v=`<span class="chip ${wu>1.001?'bd':wu>0.9?'wn':'ok'}">${wu>1.001?'Over limit':'Within limits'}</span>
-  Governing constraint: <b>${bindMode}</b> at joint <b>J${bindJ+1}</b>. ${def.dtip>S.dmax?`<span class="v-bd">Deflection exceeds budget — stiffen or shorten.</span>`:''}`;
+  Governing constraint: <b>${bindMode}</b> at joint <b>J${bindJ+1}</b> (${S.links[bindJ].act}). ${def.dtip>S.dmax?`<span class="v-bd">Deflection exceeds budget — stiffen or shorten.</span>`:''}`;
  $('#verdict').innerHTML=v;
 
- // table
- let t=`<table><thead><tr><th>Joint</th><th>Bending util</th><th>Torque util</th>
-  <th>Demand<br>N·m</th><th>Bending cap<br>N·m</th><th>Motor cap<br>N·m</th><th>Payload limit<br>kg</th><th>δ local<br>mm</th><th>f<sub>n</sub><br>Hz</th>${S.dyn?'<th>T<sub>req</sub> dyn<br>N·m</th><th>Headroom</th>':''}<th>Binding</th></tr></thead><tbody>`;
+ /* actuator schedule */
+ let at=`<table><thead><tr><th>Joint</th><th>Actuator</th><th>Qty</th><th>Ratio</th>
+  <th>Rated<br>kg·cm</th><th>Rated<br>N·m</th><th>Available<br>N·m</th><th>Demand<br>N·m</th>
+  <th>Torque util</th><th>Unit mass<br>g</th><th>Range<br>°</th><th>No-load<br>°/s</th></tr></thead><tbody>`;
  for(let i=0;i<S.N;i++){
-  const pl=M.reach[i]>0?Math.max(0,(M.X[i]/(S.kd*S.g)-M.sig[i])/M.reach[i]):0;
-  const bar=(x)=>`<div class="bar"><i style="width:${Math.min(100,x*100)}%;background:${ucol(x)}"></i><span>${fmt(x,2)}</span></div>`;
+  const o=S.links[i],s=SK(o.act),q=(s.type==='none'||s.type==='custom')?1:Math.max(1,+o.qty||1);
+  const bar=x=>`<div class="bar"><i style="width:${Math.min(100,x*100)}%;background:${ucol(x)}"></i><span>${fmt(x,2)}</span></div>`;
+  at+=`<tr><td>J${i+1}</td><td class="nm">${s.type==='custom'?'Custom':(s.type==='none'?'—':o.act)}</td>
+   <td>${s.type==='none'?'—':q}</td><td>${fmt(o.gr,0)}:1</td>
+   <td>${s.kgcm?fmt(s.kgcm,1):'—'}</td><td>${fmt(tqUnit(i),2)}</td>
+   <td>${fmt(M.W[i]/1000,2)}</td><td>${fmt(u[i].d/1000,2)}</td>
+   <td>${bar(u[i].ut)}</td><td>${s.type==='custom'?fmt(+o.hw||0,0):fmt(s.mass,1)}</td>
+   <td>${s.rot?(s.rot>=360?'cont.':s.rot):'—'}</td><td>${s.dps?s.dps:'—'}</td></tr>`;
+ }
+ {const s=SK(S.ee.act),q=(s.type==='none'||s.type==='custom')?1:Math.max(1,+S.ee.qty||1);
+  at+=`<tr><td>EE</td><td class="nm">${s.type==='none'?'—':(s.type==='custom'?'Custom':S.ee.act)}</td>
+   <td>${s.type==='none'?'—':q}</td><td>1:1</td><td>${s.kgcm?fmt(s.kgcm,1):'—'}</td>
+   <td>${fmt(s.nm,2)}</td><td>${fmt(s.nm*q*S.derate,2)}</td><td class="lbl">grip force</td>
+   <td class="lbl">not modelled</td><td>${fmt(s.mass,1)}</td>
+   <td>${s.rot?(s.rot>=360?'cont.':s.rot):'—'}</td><td>${s.dps?s.dps:'—'}</td></tr>`;}
+ $('#actTbl').innerHTML=at+'</tbody></table>';
+
+ /* mass budget */
+ const baseAct=actMass(0),manual=[];
+ let autoLumps=0;for(let i=0;i<S.N;i++){if(S.links[i].auto)autoLumps+=M.lump[i];else manual.push(i+1);}
+ const manMass=M.lsum-autoLumps,eeM=eeMass();
+ let actSum=0;for(let i=1;i<S.N;i++)if(S.links[i].auto||true)actSum+=actMass(i);
+ const row=(a,b,c)=>`<tr><td>${a}</td><td>${fmt(b*1000,0)}</td><td>${fmt(b,3)}</td><td class="nm">${c}</td></tr>`;
+ let mb=`<table class="mb"><thead><tr><th>Item</th><th>g</th><th>kg</th><th>Note</th></tr></thead><tbody>`;
+ mb+=row('Link structure (printed / machined)',M.struct,`${S.N} links`);
+ mb+=row('Joint actuators + brackets (J2…J'+S.N+')',Math.max(0,M.lsum-(S.links[S.N-1].auto?eeM:0)-manMass),'carried by the arm');
+ if(S.links[S.N-1].auto)mb+=row('End effector (servo + structure + tooling)',eeM,'distal lump on link '+S.N);
+ if(manMass>0)mb+=row('Manual lumped masses',manMass,'links '+manual.join(', '));
+ mb+=`<tr class="tot">${row('Arm mass used in calculations',M.mass,'structure + all lumps').slice(4)}`;
+ mb+=row('Base actuator J1 ('+S.links[0].act+')',baseAct,'mounted on base — not loading the arm');
+ mb+=row('Payload',P,S.mode==='load'?'computed limit':'your input');
+ mb+=`<tr class="tot">${row('Total system mass',M.mass+baseAct+P,'what you must mount and power').slice(4)}`;
+ $('#mbTbl').innerHTML=mb+'</tbody></table>';
+
+ /* per-joint table */
+ let t=`<table><thead><tr><th>Joint</th><th>Bending util</th><th>Torque util</th>
+  <th>Demand<br>N·m</th><th>Bending cap<br>N·m</th><th>Actuator cap<br>N·m</th><th>Payload limit<br>kg</th>
+  <th>δ local<br>mm</th><th>f<sub>n</sub><br>Hz</th>${S.dyn?'<th>T<sub>req</sub> dyn<br>N·m</th><th>Headroom</th>':''}<th>Binding</th></tr></thead><tbody>`;
+ for(let i=0;i<S.N;i++){
+  const pl=M.arm[i]>0?Math.max(0,(M.X[i]/(S.kd*S.g)-M.sig[i])/M.arm[i]):0;
+  const bar=x=>`<div class="bar"><i style="width:${Math.min(100,x*100)}%;background:${ucol(x)}"></i><span>${fmt(x,2)}</span></div>`;
   t+=`<tr><td>J${i+1}</td><td>${bar(u[i].us)}</td><td>${bar(u[i].ut)}</td>
    <td>${fmt(u[i].d/1000,2)}</td><td>${fmt(M.V[i]/1000,2)}</td><td>${fmt(M.W[i]/1000,2)}</td>
    <td>${fmt(pl,2)}</td><td>${fmt(def.de[i],3)}</td><td>${fmt(fn(M,i),1)}</td>`;
   if(S.dyn){const d=dyn[i];t+=`<td class="${d.Treq>d.avail?'v-bd':'v-ok'}">${fmt(d.Treq,2)}</td><td>${fmt(d.avail-d.Treq,2)}</td>`;}
-  t+=`<td>${M.V[i]<M.W[i]?'bending':'motor'}</td></tr>`;
+  t+=`<td>${M.V[i]<M.W[i]?'bending':'actuator'}</td></tr>`;
  }
  $('#tbl').innerHTML=t+'</tbody></table>';
 
- // advice
+ /* advice */
  const a=[];
  if(def.dtip>S.dmax)a.push(`<b>Deflection governs.</b> Bending stiffness scales with h³ — raising the height of link ${1+def.de.indexOf(Math.max(...def.de))} by 25% cuts its droop by about half. A hollow section of the same outside size is far more efficient than adding infill.`);
- if(bindMode==='Motor torque')a.push(`<b>Joint J${bindJ+1} is torque-limited.</b> Going from ${S.links[bindJ].gr}:1 to ${Math.ceil(S.links[bindJ].gr*1.5)}:1 would raise capacity by ~50% — watch the speed penalty and backlash.`);
- if(bindMode==='Material (bending)')a.push(`<b>Joint J${bindJ+1} is stress-limited.</b> Increase section height, switch to a tube, or move to a stiffer material; the motor has spare capacity (${fmt(M.W[bindJ]/1000,2)} N·m available vs ${fmt(u[bindJ].d/1000,2)} N·m demanded).`);
- for(let i=0;i<S.N;i++){
-  if(M.bad[i])a.push(`<span class="v-bd">Link ${i+1}: wall thickness is ≥ half the section size — reduce t or treat it as solid.</span>`);
-  if(S.links[i].mat==='PLA')a.push(`Link ${i+1} is PLA (T<sub>g</sub> ≈ 55 °C) and <b>creeps under sustained load</b>. If a pose is held for minutes, derate to ~40% of yield or switch to PETG/ASA — especially next to a warm stepper.`);
+ if(bindMode==='Actuator torque'){
+  const o=S.links[bindJ],s=SK(o.act);
+  a.push(`<b>Joint J${bindJ+1} is torque-limited</b> with ${s.type==='none'?'no actuator fitted':o.act+(o.qty>1?' ×'+o.qty:'')}. Options: step up to a higher class (${fmt(u[bindJ].d/1000/Math.max(1e-6,S.derate*S.eta*Math.max(1,o.gr)),2)} N·m rated is the minimum needed at this derate), fit a ${Math.ceil(Math.max(1,o.gr)*1.6)}:1 reduction, or double up to two actuators on a shared output.`);
  }
+ if(bindMode==='Material (bending)')a.push(`<b>Joint J${bindJ+1} is stress-limited.</b> Increase section height, switch to a tube, or move to a stiffer material; the actuator has spare capacity (${fmt(M.W[bindJ]/1000,2)} N·m available vs ${fmt(u[bindJ].d/1000,2)} N·m demanded).`);
+ for(let i=0;i<S.N;i++){
+  const o=S.links[i],s=SK(o.act);
+  if(s.type==='none')a.push(`<span class="v-bd">Joint J${i+1} has no actuator selected</span> — its torque capacity is zero, so the payload limit is zero. Choose an actuator or set it to Custom.`);
+  if(s.type==='servo'&&u[i].ut>0.8&&u[i].ut<9)a.push(`J${i+1} (${o.act}) is at <b>${fmt(u[i].ut*100,0)}%</b> of its derated rating. Hobby servo kg·cm figures are <b>stall</b> values — holding above ~50% of stall for more than a few seconds cooks the motor and strips gears. Expect audible buzzing and position drift well before failure.`);
+  if(s.type==='stepper'&&o.gr<=1)a.push(`J${i+1} uses a ${o.act} direct-driven. Steppers are almost always geared 5–30:1 for an arm joint — a reduction also divides the reflected inertia by the ratio squared.`);
+  if(s.rot>0&&s.rot<180)a.push(`J${i+1} (${o.act}) has only <b>${s.rot}°</b> of travel, which will restrict your workspace noticeably — verify the pose range you actually need before committing to the geometry.`);
+  if(s.type==='servo'&&s.dps&&S.omega>s.dps*0.7)a.push(`Target ω of ${S.omega}°/s exceeds 70% of the ${o.act} no-load speed (${s.dps}°/s) at J${i+1}. Loaded servos typically reach 50–70% of no-load — reduce ω or expect missed timing.`);
+  if(o.qty>1&&s.type==='servo')a.push(`J${i+1} runs ${o.qty}× ${o.act} in parallel. They will fight each other unless the output is a rigid shared shaft with matched horn positions — budget for mechanical trimming, and never parallel their signal lines into one PWM output expecting perfect sync.`);
+  if(M.bad[i])a.push(`<span class="v-bd">Link ${i+1}: wall thickness is ≥ half the section size — reduce t or treat it as solid.</span>`);
+  if(o.mat==='PLA')a.push(`Link ${i+1} is PLA (T<sub>g</sub> ≈ 55 °C) and <b>creeps under sustained load</b>. If a pose is held for minutes, derate to ~40% of yield or switch to PETG/ASA — a high-torque servo running near stall gets genuinely hot.`);
+ }
+ if(S.ee.cg>0)a.push(`The ${fmt(S.ee.cg,0)} mm payload CoG offset adds a constant ${fmt(P*S.g*S.ee.cg/1000,2)} N·m to <i>every</i> joint. Bringing the grip point closer to the flange is usually the cheapest capacity gain available.`);
+ if(eeMass()>P&&P>0)a.push(`Your end effector (${fmt(eeMass()*1000,0)} g) is heavier than the payload it carries (${fmt(P*1000,0)} g) — lightening the gripper buys payload almost 1:1 at the tip.`);
  const lowF=Math.min(...Array.from({length:S.N},(_,i)=>fn(M,i)));
  if(lowF<15)a.push(`Lowest natural frequency is ${fmt(lowF,1)} Hz — keep commanded motion below about ${fmt(lowF/5,1)} Hz or you will fight oscillation in tuning.`);
- if(P/Math.max(1e-9,M.mass)<0.15&&S.mode==='load')a.push(`Payload-to-arm ratio is only ${fmt(P/M.mass,2)}:1 — most of your torque is lifting the arm itself. Lighter distal links pay back twice over.`);
- if(S.dyn){const bad=dyn.findIndex(d=>d.Treq>d.avail);
-  if(bad>=0)a.push(`<span class="v-bd">Dynamics: joint J${bad+1} needs ${fmt(dyn[bad].Treq,2)} N·m to accelerate at ${fmt(dyn[bad].al,1)} rad/s² but only ${fmt(dyn[bad].avail,2)} N·m is available.</span> Lengthen t<sub>a</sub> or lower ω.`);
-  else a.push(`Dynamics OK: all joints have torque headroom at ω = ${S.omega}°/s reached in ${S.ta} s. Also check <b>RMS</b> torque against the motor's continuous rating.`);}
- a.push(`Not modelled here: torsion when the base slews, buckling of compression members, joint backlash and bearing play, fastener pull-out, and stress concentrations at the joints — which is where printed arms usually fail first.`);
+ if(P/Math.max(1e-9,M.mass)<0.15&&S.mode==='load')a.push(`Payload-to-arm ratio is only ${fmt(P/M.mass,2)}:1 — most of your torque is lifting the arm and its own actuators. Mass removed from a distal joint pays back twice over.`);
+ if(S.dyn){const bi=dyn.findIndex(d=>d.Treq>d.avail);
+  if(bi>=0)a.push(`<span class="v-bd">Dynamics: joint J${bi+1} needs ${fmt(dyn[bi].Treq,2)} N·m to accelerate at ${fmt(dyn[bi].al,1)} rad/s² but only ${fmt(dyn[bi].avail,2)} N·m is available.</span> Lengthen t<sub>a</sub> or lower ω.`);
+  else a.push(`Dynamics OK: all joints have torque headroom at ω = ${S.omega}°/s reached in ${S.ta} s. Also check <b>RMS</b> torque against the continuous rating — servos have no published continuous figure, so treat ~30% of stall as a safe duty-cycle ceiling.`);}
+ a.push(`Power budget: a 25–35 kg·cm digital servo can draw 2.5–3 A at stall. ${S.N} of them plus the gripper needs a supply (and wiring) rated for the simultaneous worst case, not the average — brownouts cause position glitches that look like software bugs.`);
+ a.push(`Not modelled here: grip force, servo output-shaft and horn strength (often the real weak point), torsion when the base slews, buckling of compression members, joint backlash and bearing play, fastener pull-out, and stress concentrations at the joints.`);
  $('#advice').innerHTML=a.map(x=>`<li>${x}</li>`).join('');
 
  drawSections(M);
  drawArm(M,P,def,u);
  $('#modeHelp').innerHTML=S.mode==='load'
-  ? 'Link lengths are <b>inputs</b>; the payload limit is computed from bending stress, motor torque and deflection.'
+  ? 'Link lengths are <b>inputs</b>; the payload limit is computed from bending stress, actuator torque and deflection.'
   : 'Payload is an <b>input</b>; link lengths are solved so the worst utilisation equals exactly 1.00. Set the proportional <b>shares</b> per link.';
- $('#bLink').dataset.hash=encodeState();
 }
 
 /* ============ EVENTS ============ */
-function syncInputs(sel,val){document.querySelectorAll(sel).forEach(e=>{if(e.value!=val)e.value=val;});}
-document.addEventListener('input',e=>{
- const t=e.target;
- if(t.dataset.g!==undefined&&t.dataset.g!==''){
-  const k=t.dataset.g;let v=t.type==='number'||t.type==='range'?+t.value:t.value;
-  if(k==='N'||k==='exag')v=+v;
-  S[k]=v;syncInputs(`[data-g="${k}"]`,t.value);
-  if(k==='N'){update();return;}
+function syncInputs(sel,val){document.querySelectorAll(sel).forEach(e=>{if(e.type!=='checkbox'&&e.value!=val)e.value=val;});}
+function handle(e){
+ const t=e.target;if(!t.dataset)return;
+ if(t.dataset.g!==undefined){
+  const k=t.dataset.g;S[k]=(k==='N'||k==='exag')?+t.value:(t.type==='number'||t.type==='range'?+t.value:t.value);
+  syncInputs(`[data-g="${k}"]`,t.value);update();return;
+ }
+ if(t.dataset.e!==undefined){
+  const k=t.dataset.e;S.ee[k]=(t.tagName==='SELECT')?t.value:+t.value;
+  if(t.tagName==='SELECT'){buildEE();}else syncInputs(`[data-e="${k}"]`,t.value);
   update();return;
  }
  if(t.dataset.k!==undefined&&t.dataset.i!==undefined){
   const i=+t.dataset.i,k=t.dataset.k;
-  S.links[i][k]=(t.tagName==='SELECT')?t.value:+t.value;
-  if(t.tagName!=='SELECT')syncInputs(`[data-i="${i}"][data-k="${k}"]`,t.value);
-  if(k==='sec'){buildLinks();attachNothing();}
+  if(t.type==='checkbox')S.links[i][k]=t.checked;
+  else S.links[i][k]=(t.tagName==='SELECT')?t.value:+t.value;
+  if(t.tagName!=='SELECT'&&t.type!=='checkbox')syncInputs(`[data-i="${i}"][data-k="${k}"]`,t.value);
+  if(k==='sec'||k==='act'){buildLinks();}
   update();return;
  }
-});
-function attachNothing(){}
+}
+document.addEventListener('input',handle);
+document.addEventListener('change',handle);
 $('#dynOn').addEventListener('change',e=>{S.dyn=e.target.checked;update();});
 $('#mLoad').onclick=()=>{S.mode='load';$('#mLoad').classList.add('on');$('#mLen').classList.remove('on');update();};
 $('#mLen').onclick=()=>{S.mode='lengths';$('#mLen').classList.add('on');$('#mLoad').classList.remove('on');update();};
 [1,2,3].forEach(n=>{$('#bPreset'+n).onclick=()=>{
- const p=PRESETS[n],d=defaults();Object.assign(d,{N:p.N,fos:p.fos,k:p.k,kd:p.kd,eta:p.eta,dmax:p.dmax,mode:S.mode});
- p.links.forEach((l,i)=>d.links[i]=Object.assign({},l,{share:[1,1,.6,.5,.4,.3][i]}));
- S=d;buildGlobals();buildLinks();update();};});
+ const p=PRESETS[n],d=defaults();
+ Object.assign(d,{N:p.N,fos:p.fos,k:p.k,kd:p.kd,eta:p.eta,derate:p.derate,dmax:p.dmax,payload:p.payload,mode:S.mode});
+ d.ee=Object.assign(d.ee,p.ee);
+ p.links.forEach((l,i)=>{d.links[i]=Object.assign({},l);});
+ S=d;buildGlobals();buildEE();buildLinks();update();};});
 $('#bCsv').onclick=()=>{
  const M=buildModel(S.links.slice(0,S.N).map(l=>+l.L||0));
  const sp=strengthPayload(M),dp=deflPayload(M),P=S.mode==='load'?Math.min(sp.p,dp):S.payload;
  const u=utilArr(M,P),def=deflection(M,P);
  let r=[['Robot arm results'],['Mode',S.mode],['Payload used (kg)',P.toFixed(3)],
-  ['Total reach (mm)',M.reach[0].toFixed(1)],['Arm mass (kg)',M.mass.toFixed(3)],
+  ['Total reach (mm)',M.reach[0].toFixed(1)],['Payload CoG offset (mm)',M.cg],
+  ['Arm mass loaded (kg)',M.mass.toFixed(3)],['Link structure (kg)',M.struct.toFixed(3)],
+  ['Distal lumps total (kg)',M.lsum.toFixed(3)],['Base actuator (kg)',actMass(0).toFixed(3)],
+  ['End effector (kg)',eeMass().toFixed(3)],
   ['Tip deflection (mm)',def.dtip.toFixed(3)],['Deflection budget (mm)',S.dmax],
-  ['FoS',S.fos],['k',S.k],['Kd',S.kd],['eta',S.eta],[],
-  ['Link','Length mm','Material','Section','D1','D2','t','Mass kg','I mm4','Z mm3','Demand Nm','Bend cap Nm','Motor cap Nm','Bend util','Torque util','Local defl mm']];
- for(let i=0;i<S.N;i++){const o=S.links[i];
-  r.push([i+1,M.L[i].toFixed(1),o.mat,o.sec,o.d1,o.d2,o.t,M.m[i].toFixed(4),M.I[i].toFixed(0),M.Z[i].toFixed(1),
-   (u[i].d/1000).toFixed(3),(M.V[i]/1000).toFixed(3),(M.W[i]/1000).toFixed(3),u[i].us.toFixed(3),u[i].ut.toFixed(3),def.de[i].toFixed(4)]);}
+  ['FoS',S.fos],['k',S.k],['Kd',S.kd],['eta',S.eta],['Actuator derate',S.derate],[],
+  ['Link','Length mm','Material','Section','D1','D2','t','Link mass kg','Distal lump kg','Auto lump',
+   'Actuator','Qty','Rated Nm each','Ratio','Bracket g','I mm4','Z mm3',
+   'Demand Nm','Bend cap Nm','Act cap Nm','Bend util','Torque util','Local defl mm','Range deg','No-load dps']];
+ for(let i=0;i<S.N;i++){const o=S.links[i],s=SK(o.act);
+  r.push([i+1,M.L[i].toFixed(1),o.mat,o.sec,o.d1,o.d2,o.t,M.m[i].toFixed(4),M.lump[i].toFixed(4),o.auto?'yes':'no',
+   o.act,o.qty,tqUnit(i).toFixed(3),o.gr,o.hw,M.I[i].toFixed(0),M.Z[i].toFixed(1),
+   (u[i].d/1000).toFixed(3),(M.V[i]/1000).toFixed(3),(M.W[i]/1000).toFixed(3),
+   u[i].us.toFixed(3),u[i].ut.toFixed(3),def.de[i].toFixed(4),s.rot,s.dps]);}
+ r.push([]);r.push(['End effector',S.ee.act,'qty',S.ee.qty,'structure g',S.ee.struct,'tooling g',S.ee.tool,'cg mm',S.ee.cg]);
  const blob=new Blob([r.map(x=>x.join(',')).join('\n')],{type:'text/csv'});
  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='robot-arm-results.csv';a.click();URL.revokeObjectURL(a.href);
 };
@@ -619,9 +834,16 @@ $('#bLink').onclick=()=>{
 (function init(){
  if(location.hash.length>4){try{
   const o=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(1)))));
-  if(o&&o.links&&o.links.length===6)S=Object.assign(defaults(),o);
+  if(o&&o.links&&o.links.length){
+   const d=defaults();
+   S=Object.assign(d,o);
+   S.ee=Object.assign(defaults().ee,o.ee||{});
+   S.links=defaults().links.map((dl,i)=>Object.assign(dl,o.links[i]||{}));
+   if(!SERV[S.ee.act])S.ee.act='MG90S';
+   S.links.forEach(l=>{if(!SERV[l.act])l.act='Custom';});
+  }
  }catch(e){}}
- buildGlobals();buildLinks();
+ buildGlobals();buildEE();buildLinks();
  if(S.mode==='lengths'){$('#mLen').classList.add('on');$('#mLoad').classList.remove('on');}
  update();
 })();
