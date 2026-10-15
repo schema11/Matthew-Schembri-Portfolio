@@ -27,7 +27,7 @@
 
   <dl class="meta">
     <dt>Role</dt><dd>Design, engineering model and implementation</dd>
-    <dt>Type</dt><dd>Interactive calculator — HTML, CSS and vanilla JavaScript, no dependencies</dd>
+    <dt>Type</dt><dd>Interactive calculator - HTML, CSS and vanilla JavaScript, no dependencies</dd>
     <dt>Status</dt><dd>Working · <span class="chip live">live</span></dd>
     <dt>Date</dt><dd>[Month Year]</dd>
     <dt>Context</dt><dd>[e.g. personal project supporting a 3-DOF printed arm build]</dd>
@@ -38,12 +38,12 @@
     <a class="btn" href="../tools/armToolExplanation.html">Read the method &amp; formulas</a>
   </div>
 
-  <h2 id="evidence">Evidence — the working tool</h2>
+  <h2 id="evidence">Evidence - the working tool</h2>
   <p>The tool below is live and fully interactive. Drag any slider and every number, table and diagram recalculates immediately. Each field carries a small <strong>ⓘ</strong> button that expands an explanation of what the value means, so it is usable without reading the method document first.</p>
 
   <figure class="evidence">
     <header>
-      <span class="tag">⚙️ Live tool — embedded</span>
+      <span class="tag">⚙️ Live tool - embedded</span>
       <a class="btn sm" href="../tools/armActuatorCalculation.html" target="_blank" rel="noopener">Open in new tab ↗</a>
     </header>
     <iframe src="../tools/armActuatorCalculation.html" loading="lazy"
@@ -55,13 +55,13 @@
   <p>Sizing a hobby robot arm usually happens by intuition and forum anecdote. The common failure is to pick servos from their advertised “25 kg” rating, print some links, and discover the arm either sags visibly under its own weight or buzzes and strips gears while holding a pose. Three things cause that:</p>
   <ul>
     <li><strong>The chain is coupled.</strong> Every joint carries the full weight and moment of everything distal to it, so a motor added at the wrist penalises every joint beneath it.</li>
-    <li><strong>Stall torque is not working torque.</strong> A servo's kg·cm figure is measured with the rotor locked at maximum current — the one condition in which it does no useful work and overheats fastest.</li>
+    <li><strong>Stall torque is not working torque.</strong> A servo's kg·cm figure is measured with the rotor locked at maximum current - the one condition in which it does no useful work and overheats fastest.</li>
     <li><strong>Stiffness fails before strength.</strong> A printed link will droop out of tolerance long before it yields, and droop compounds down the chain because each link also passes on its slope.</li>
   </ul>
   <p>I wanted a tool that made those three effects visible at the moment of making a design decision, rather than after a print had failed.</p>
 
   <h2>Approach</h2>
-  <p>The model places the arm in its <strong>worst-case pose</strong> — fully extended, horizontal, gravity perpendicular to the links — and evaluates three independent limits at every joint. The arm's real capability is the smallest of them.</p>
+  <p>The model places the arm in its <strong>worst-case pose</strong> - fully extended, horizontal, gravity perpendicular to the links - and evaluates three independent limits at every joint. The arm's real capability is the smallest of them.</p>
 
   <h3>① Bending stress</h3>
   <p>Section properties are derived for six profiles (solid and hollow rod, square and rectangular). Allowable moment is <code>Z × yield × k ÷ FoS</code>, where <code>k</code> is a print knockdown factor for layer adhesion and voids. Hollow sections are handled properly, which matters because removing material near the neutral axis costs almost no stiffness.</p>
@@ -70,37 +70,37 @@
   <p>Available torque is <code>rated × quantity × derate × gear ratio × η</code>. The derate term is deliberately prominent and defaults to 0.5, because treating a stall rating as usable capacity is the single most common sizing error in hobby robotics.</p>
 
   <h3>③ Tip deflection</h3>
-  <p>Each link is solved as a cantilever carrying a tip force, an end moment fed back by the outboard chain, and its own distributed weight. Total droop sums each link's local sag <em>plus</em> the slope it hands to everything beyond it — which is why a four-link arm sags far more than any single-link calculation predicts.</p>
+  <p>Each link is solved as a cantilever carrying a tip force, an end moment fed back by the outboard chain, and its own distributed weight. Total droop sums each link's local sag <em>plus</em> the slope it hands to everything beyond it - which is why a four-link arm sags far more than any single-link calculation predicts.</p>
 
   <div class="panel note">
     <h3>Design decisions worth calling out</h3>
     <ul>
       <li><strong>Component mass is assembled, not estimated.</strong> Selecting a servo for joint J<sub>i+1</sub> applies its mass to the distal end of link <em>i</em>, because that is where it physically bolts. The base actuator is tracked in the mass budget but excluded from structural load, since the base carries it directly.</li>
-      <li><strong>Two solve directions from one model.</strong> Mode ① evaluates a geometry. Mode ② inverts it, bisecting total reach until the worst utilisation equals exactly 1.00 — so the answer is a dimension, not a pass/fail.</li>
+      <li><strong>Two solve directions from one model.</strong> Mode ① evaluates a geometry. Mode ② inverts it, bisecting total reach until the worst utilisation equals exactly 1.00 - so the answer is a dimension, not a pass/fail.</li>
       <li><strong>Utilisation as the common currency.</strong> Expressing all three limits as a ratio to 1.00 makes them directly comparable and lets the tool name the binding constraint instead of leaving the user to infer it.</li>
       <li><strong>Payload CoG offset.</strong> Gripping a part 80 mm beyond the flange adds that distance to every joint's lever arm. It is a large effect, easy to forget, and cheap to fix in hardware.</li>
-      <li><strong>No dependencies.</strong> Everything is inline — the diagrams are generated SVG, the state serialises into the URL hash for sharing, and the page works from a local file with no network.</li>
+      <li><strong>No dependencies.</strong> Everything is inline - the diagrams are generated SVG, the state serialises into the URL hash for sharing, and the page works from a local file with no network.</li>
     </ul>
   </div>
 
   <h2>What the tool outputs</h2>
   <ul>
-    <li><strong>Practical payload</strong> — the lesser of the strength/torque limit and the deflection limit, with both shown separately so the trade-off is explicit.</li>
+    <li><strong>Practical payload</strong> - the lesser of the strength/torque limit and the deflection limit, with both shown separately so the trade-off is explicit.</li>
     <li><strong>Maximum link lengths</strong> for a target payload, distributed by proportional shares you control.</li>
-    <li><strong>Per-joint breakdown</strong> — utilisation bars, demand and capacity in N·m, local deflection and estimated natural frequency.</li>
-    <li><strong>Actuator schedule and mass budget</strong> — what each motor must deliver, and where the arm's mass actually lives.</li>
+    <li><strong>Per-joint breakdown</strong> - utilisation bars, demand and capacity in N·m, local deflection and estimated natural frequency.</li>
+    <li><strong>Actuator schedule and mass budget</strong> - what each motor must deliver, and where the arm's mass actually lives.</li>
     <li><strong>Generated design advice</strong> that names the binding joint and the specific remedy, including practical traps the equations alone would not flag: servo duty cycles, PLA creep, dual-servo synchronisation, supply current.</li>
   </ul>
 
-  <h2>Limitations — what this does not do</h2>
+  <h2>Limitations - what this does not do</h2>
   <div class="panel caution">
     <p>Stating these plainly is part of the deliverable. The model is idealised Euler–Bernoulli beam theory on a single worst-case pose, so it excludes:</p>
     <ul>
-      <li>Stress concentrations and fastener detail at the joints — in practice the most common real failure site on a printed arm.</li>
+      <li>Stress concentrations and fastener detail at the joints - in practice the most common real failure site on a printed arm.</li>
       <li>Servo output-shaft and horn strength, which frequently governs before the link does.</li>
       <li>Torsion when the base slews with the arm extended sideways; buckling of any compression member.</li>
       <li>Joint backlash, bearing play and gearbox compliance, which often exceed structural deflection.</li>
-      <li>Fatigue, creep and thermal softening — relevant because a high-torque servo sitting near stall genuinely heats the plastic around it.</li>
+      <li>Fatigue, creep and thermal softening - relevant because a high-torque servo sitting near stall genuinely heats the plastic around it.</li>
       <li>Grip force at the end effector, which is a separate calculation.</li>
     </ul>
     <p>Actuator figures are indicative values for each common clone class, not datasheet guarantees. Clone quality varies enormously between sellers.</p>
