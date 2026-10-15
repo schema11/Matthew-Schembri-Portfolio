@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Robot Arm Load &amp; Link-Length Calculator — Build Spec</title>
+<meta name="description" content="Specification for an Excel workbook that calculates robot arm load limits and permissible link lengths from material, cross-section and motor torque inputs.">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<style>
+  :root{
+    --bg:#0d1117; --panel:#161b22; --panel2:#1c2330; --line:#30363d;
+    --tx:#e6edf3; --tx2:#9aa7b4; --accent:#58a6ff; --ok:#3fb950;
+    --warn:#d29922; --bad:#f85149; --mono:ui-monospace,SFMono-Regular,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth; scroll-padding-top:1rem}
+  body{margin:0; background:var(--bg); color:var(--tx);
+       font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+  .wrap{display:grid; grid-template-columns:260px minmax(0,1fr); gap:2.5rem;
+        max-width:1300px; margin:0 auto; padding:2rem 1.25rem 5rem;}
+  /* ---- sidebar ---- */
+  nav{position:sticky; top:1.5rem; align-self:start; max-height:calc(100vh - 3rem); overflow-y:auto;
+      border-left:2px solid var(--line); padding-left:1rem; font-size:.875rem;}
+  nav strong{display:block; color:var(--tx2); text-transform:uppercase; letter-spacing:.08em;
+             font-size:.72rem; margin:1.25rem 0 .5rem;}
+  nav a{display:block; color:var(--tx2); text-decoration:none; padding:.22rem 0;}
+  nav a:hover{color:var(--accent)}
+  /* ---- type ---- */
+  h1{font-size:2rem; line-height:1.2; margin:0 0 .4rem}
+  h2{font-size:1.4rem; margin:3rem 0 1rem; padding-bottom:.4rem; border-bottom:1px solid var(--line)}
+  h3{font-size:1.08rem; margin:2rem 0 .6rem; color:var(--accent)}
+  h4{font-size:.95rem; margin:1.4rem 0 .4rem; color:var(--tx2); text-transform:uppercase; letter-spacing:.05em}
+  p,li{color:var(--tx)}
+  .lede{color:var(--tx2); font-size:1.05rem}
+  code{font-family:var(--mono); font-size:.86em; background:var(--panel2);
+       padding:.1em .35em; border-radius:4px; color:#ffa657}
+  /* ---- panels ---- */
+  .panel{background:var(--panel); border:1px solid var(--line); border-radius:10px;
+         padding:1.1rem 1.25rem; margin:1.25rem 0;}
+  .note{border-left:3px solid var(--accent)}
+  .caution{border-left:3px solid var(--warn)}
+  .cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:.9rem; margin:1.25rem 0}
+  .card{background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:1rem}
+  .card h5{margin:0 0 .35rem; font-size:.95rem}
+  .card p{margin:0; font-size:.88rem; color:var(--tx2)}
+  .pill{display:inline-block; font-size:.7rem; letter-spacing:.05em; text-transform:uppercase;
+        padding:.15rem .5rem; border-radius:99px; border:1px solid var(--line); color:var(--tx2)}
+  /* ---- tables ---- */
+  .scroll{overflow-x:auto; margin:1rem 0}
+  table{border-collapse:collapse; width:100%; font-size:.88rem; min-width:520px}
+  th,td{border:1px solid var(--line); padding:.5rem .6rem; text-align:left; vertical-align:top}
+  th{background:var(--panel2); font-weight:600; color:var(--tx2); white-space:nowrap}
+  tbody tr:nth-child(even){background:#12171f}
+  td.cell{font-family:var(--mono); color:var(--accent); white-space:nowrap}
+  /* ---- formula blocks ---- */
+  .f{position:relative; background:#010409; border:1px solid var(--line); border-radius:8px;
+     margin:.5rem 0 1rem; padding:.7rem 5.5rem .7rem .8rem; overflow-x:auto}
+  .f code{background:none; padding:0; color:#7ee787; white-space:pre; font-size:.82rem; line-height:1.6}
+  .f button{position:absolute; top:.5rem; right:.5rem; background:var(--panel2); color:var(--tx2);
+            border:1px solid var(--line); border-radius:6px; font-size:.72rem; padding:.25rem .55rem; cursor:pointer}
+  .f button:hover{color:var(--tx); border-color:var(--accent)}
+  .f button.done{color:var(--ok); border-color:var(--ok)}
+  /* ---- diagrams ---- */
+  figure{margin:1.5rem 0; background:var(--panel); border:1px solid var(--line);
+         border-radius:10px; padding:1rem}
+  figure svg{display:block; width:100%; height:auto}
+  figcaption{font-size:.82rem; color:var(--tx2); margin-top:.6rem; text-align:center}
+  .mermaid{background:var(--panel); border:1px solid var(--line); border-radius:10px;
+           padding:1rem; margin:1.5rem 0; text-align:center}
+  svg text{font-family:-apple-system,"Segoe UI",Roboto,sans-serif; fill:#e6edf3; font-size:13px}
+  svg .dim{stroke:#9aa7b4; stroke-width:1}
+  svg .lbl{fill:#9aa7b4; font-size:12px}
+  svg .acc{stroke:#58a6ff; stroke-width:2.5; fill:none}
+  svg .frc{stroke:#f85149; stroke-width:2}
+  svg .frctx{fill:#f85149; font-size:12px; font-weight:600}
+  svg .sect{fill:#1f6feb33; stroke:#58a6ff; stroke-width:2}
+  svg .hole{fill:#0d1117; stroke:#58a6ff; stroke-width:1.5}
+  footer{grid-column:1/-1; border-top:1px solid var(--line); margin-top:3rem; padding-top:1.25rem;
+         color:var(--tx2); font-size:.84rem}
+  ol.steps{counter-reset:s; list-style:none; padding:0}
+  ol.steps li{counter-increment:s; position:relative; padding:0 0 .9rem 2.4rem}
+  ol.steps li::before{content:counter(s); position:absolute; left:0; top:.05rem; width:1.6rem; height:1.6rem;
+    background:var(--panel2); border:1px solid var(--line); border-radius:50%; text-align:center;
+    line-height:1.5rem; font-size:.8rem; color:var(--accent)}
+  @media (max-width:900px){ .wrap{grid-template-columns:1fr} nav{display:none} }
+  @media print{ body{background:#fff;color:#000} nav,.f button{display:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<nav>
+  <strong>Method</strong>
+  <a href="#method">Modelling approach</a>
+  <a href="#flow">Constraint logic</a>
+  <a href="#materials">Material reference</a>
+  <a href="#sections">Cross-sections</a>
+  <strong>Tab 1 — Load Limit</strong>
+  <a href="#t1-globals">Global inputs</a>
+  <a href="#t1-links">Link table</a>
+  <a href="#t1-calc">Calculated columns</a>
+  <a href="#t1-defl">Deflection block</a>
+  <a href="#t1-results">Results</a>
+  <strong>Tab 2 — Link Lengths</strong>
+  <a href="#t2-globals">Global inputs</a>
+  <a href="#t2-calc">Demand &amp; utilisation</a>
+  <a href="#t2-solve">Goal Seek</a>
+  <strong>Going further</strong>
+  <a href="#extra">Extra calculations</a>
+  <a href="#checklist">Validation checklist</a>
+</nav>
+
+<main>
+  <span class="pill">Engineering aid · v1.0</span>
+  <h1>Robot Arm Load Limit &amp; Link-Length Calculator</h1>
+  <p class="lede">A complete build specification for a two-tab Excel workbook. <strong>Tab 1</strong> takes a geometry and returns the maximum payload. <strong>Tab 2</strong> takes a payload and returns the maximum permissible length of every link. Every formula below is copy-paste ready.</p>
+
+  <!-- ================= METHOD ================= -->
+  <h2 id="method">1 · Modelling approach</h2>
+  <p>A serial arm is a <strong>coupled chain</strong>: each joint carries the weight and moment of everything distal to it. Both tabs model the <strong>worst-case pose</strong> — fully extended, straight, horizontal, gravity perpendicular to the links — and test three independent limits at every joint.</p>
+
+  <div class="cards">
+    <div class="card"><h5>① Bending stress</h5><p>Will the link snap? Compares applied moment against section modulus × allowable stress.</p></div>
+    <div class="card"><h5>② Actuator torque</h5><p>Can the motor hold the pose? Compares applied moment against peak torque × gear ratio × efficiency.</p></div>
+    <div class="card"><h5>③ Tip deflection</h5><p>Will it droop or wobble? Superposed cantilever deflection plus carried slope from every inboard link.</p></div>
+  </div>
+  <p>The true capability is the <strong>minimum of the three</strong>. For FDM-printed arms, ③ almost always governs long before ① does.</p>
+
+  <figure>
+    <svg viewBox="0 0 880 320" role="img" aria-label="Three-link robot arm in worst-case horizontal pose showing moment arms">
+      <!-- base -->
+      <rect x="28" y="95" width="26" height="110" fill="#1c2330" stroke="#30363d"/>
+      <g stroke="#9aa7b4" stroke-width="1">
+        <line x1="28" y1="100" x2="18" y2="110"/><line x1="28" y1="118" x2="18" y2="128"/>
+        <line x1="28" y1="136" x2="18" y2="146"/><line x1="28" y1="154" x2="18" y2="164"/>
+        <line x1="28" y1="172" x2="18" y2="182"/><line x1="28" y1="190" x2="18" y2="200"/>
+      </g>
+      <!-- links -->
+      <line class="acc" x1="70" y1="150" x2="290" y2="150"/>
+      <line class="acc" x1="290" y1="150" x2="490" y2="150"/>
+      <line class="acc" x1="490" y1="150" x2="650" y2="150"/>
+      <!-- joints -->
+      <g fill="#0d1117" stroke="#58a6ff" stroke-width="2.5">
+        <circle cx="70" cy="150" r="11"/><circle cx="290" cy="150" r="11"/><circle cx="490" cy="150" r="11"/>
+      </g>
+      <text x="70" y="128" text-anchor="middle" class="lbl">J1</text>
+      <text x="290" y="128" text-anchor="middle" class="lbl">J2</text>
+      <text x="490" y="128" text-anchor="middle" class="lbl">J3</text>
+      <text x="180" y="138" text-anchor="middle">Link 1 · L₁</text>
+      <text x="390" y="138" text-anchor="middle">Link 2 · L₂</text>
+      <text x="570" y="138" text-anchor="middle">Link 3 · L₃</text>
+      <!-- payload -->
+      <rect x="650" y="136" width="42" height="28" rx="4" fill="#1f6feb33" stroke="#58a6ff" stroke-width="2"/>
+      <text x="671" y="155" text-anchor="middle" font-size="12">EE</text>
+      <!-- force arrows -->
+      <defs>
+        <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto">
+          <path d="M0,0 L9,4.5 L0,9 z" fill="#f85149"/>
+        </marker>
+        <marker id="ag" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+          <path d="M0,0 L8,4 L0,8 z" fill="#9aa7b4"/>
+        </marker>
+        <marker id="ag2" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto">
+          <path d="M8,0 L0,4 L8,8 z" fill="#9aa7b4"/>
+        </marker>
+      </defs>
+      <g class="frc" marker-end="url(#ar)">
+        <line x1="180" y1="152" x2="180" y2="192"/>
+        <line x1="390" y1="152" x2="390" y2="192"/>
+        <line x1="570" y1="152" x2="570" y2="192"/>
+        <line x1="671" y1="166" x2="671" y2="212"/>
+        <line x1="290" y1="162" x2="290" y2="196"/>
+        <line x1="490" y1="162" x2="490" y2="196"/>
+      </g>
+      <text x="186" y="206" class="frctx">m₁g</text>
+      <text x="396" y="206" class="frctx">m₂g</text>
+      <text x="576" y="206" class="frctx">m₃g</text>
+      <text x="686" y="212" class="frctx">P·g</text>
+      <text x="256" y="211" class="frctx" font-size="11">P₁</text>
+      <text x="456" y="211" class="frctx" font-size="11">P₂</text>
+      <!-- dimension lines: reach from each joint to tip -->
+      <g class="dim" marker-start="url(#ag2)" marker-end="url(#ag)">
+        <line x1="490" y1="240" x2="671" y2="240"/>
+        <line x1="290" y1="268" x2="671" y2="268"/>
+        <line x1="70"  y1="296" x2="671" y2="296"/>
+      </g>
+      <g stroke="#30363d" stroke-dasharray="3 3">
+        <line x1="70" y1="160" x2="70" y2="296"/>
+        <line x1="290" y1="160" x2="290" y2="268"/>
+        <line x1="490" y1="160" x2="490" y2="240"/>
+        <line x1="671" y1="220" x2="671" y2="296"/>
+      </g>
+      <text x="580" y="234" text-anchor="middle" class="lbl">S₃ — reach from J3</text>
+      <text x="480" y="262" text-anchor="middle" class="lbl">S₂ — reach from J2</text>
+      <text x="370" y="290" text-anchor="middle" class="lbl">S₁ — reach from J1 (total reach)</text>
+      <text x="760" y="80" class="lbl">P = payload (kg)</text>
+      <text x="760" y="100" class="lbl">Pᵢ = lumped mass at</text>
+      <text x="760" y="118" class="lbl">distal end of link i</text>
+      <text x="760" y="136" class="lbl">(motor, gearbox, bracket)</text>
+      <text x="760" y="160" class="lbl">EE = end effector</text>
+    </svg>
+    <figcaption>Worst-case pose. The moment at joint <em>i</em> is the payload acting at S<sub>i</sub>, plus every distal link mass and lumped mass acting at its own lever arm.</figcaption>
+  </figure>
+
+  <div class="panel note">
+    <h4>Governing equations</h4>
+    <p>Moment demand at joint <em>i</em>, with dynamic amplification \(K_d\):</p>
+    <p>$$M_i = K_d\,g\left[P\,S_i + \sum_{j>i}\left(m_j\left(S_i-S_j+\tfrac{L_j}{2}\right) + P_j\left(S_i-S_j+L_j\right)\right)\right]$$</p>
+    <p>Capacity is the lesser of material and motor:</p>
+    <p>$$M_{cap,i} = \min\!\left(\underbrace{Z_i\,\frac{\sigma_{y,i}\,k}{\text{FoS}}}_{\text{bending}},\ \underbrace{T_{motor,i}\cdot i_{gear}\cdot \eta}_{\text{actuator}}\right)$$</p>
+    <p>Rearranged for payload, the lim
