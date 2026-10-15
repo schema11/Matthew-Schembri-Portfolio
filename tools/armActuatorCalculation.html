@@ -121,10 +121,19 @@ svg .dim{stroke:#30363d;stroke-width:1}
 footer{border-top:1px solid var(--ln);margin-top:1rem;padding:1rem 1.25rem 2.5rem;color:var(--t2);font-size:.76rem}
 footer div{max-width:1480px;margin:0 auto}
 @media(max-width:1080px){.wrap{grid-template-columns:1fr}.col-r{position:static}}
+.pnav{display:flex;flex-wrap:wrap;gap:.3rem;align-items:center;margin-bottom:.6rem;font-size:.8rem}
+.pnav a{color:var(--t2);text-decoration:none;padding:.2rem .5rem;border-radius:6px;border:1px solid transparent}
+.pnav a:hover{color:var(--ac);background:#1f6feb1a;border-color:#1f6feb66}
+.pnav span{color:#6e7b8a}
 </style>
 </head>
 <body>
 <header><div class="hd">
+  <div class="pnav" style="flex:1 0 100%">
+  <a href="../index.html">← Portfolio</a><span>/</span>
+  <a href="../tools.html">Tools</a><span>/</span>
+  <a href="../projects/robot-arm.html">Case study</a>
+</div>
   <h1>Arm Payload and Actuator Calculator<small>Live bending · torque · deflection model with servo database — fully offline</small></h1>
   <div style="display:flex;gap:.4rem;flex-wrap:wrap;align-items:center">
     <button class="btn sm prim" id="bHelp">ⓘ Show all info</button>

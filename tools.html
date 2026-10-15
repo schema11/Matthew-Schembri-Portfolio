@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive engineering tools and calculators, each with a written case study and working evidence.">
+  <title>Tools | Portfolio</title>
+  <link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<nav class="nav" aria-label="Main">
+  <div class="nav-in">
+    <a class="brand" href="index.html"><span class="mark">◆</span> Your Name</a>
+    <ul>
+      <li><a href="index.html">Home</a></li>
+      <li><a href="tools.html" aria-current="page">Tools</a></li>
+      <li><a href="#projects">Projects</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main id="projects">
+  <p class="eyebrow">Tools</p>
+  <h1>Interactive engineering tools</h1>
+  <p class="lede">Each entry pairs a <strong>working tool</strong> you can use in the browser with a <strong>written case study</strong> explaining the approach, the assumptions and the limitations. Everything runs client-side — no accounts, no installs, no data leaves your machine.</p>
+
+  <div class="grid">
+
+    <!-- ============ PROJECT 1 ============ -->
+    <article class="card">
+      <div class="thumb">
+        <svg viewBox="0 0 320 120" role="img" aria-label="Robot arm schematic">
+          <rect x="10" y="38" width="12" height="44" fill="#1c2330" stroke="#30363d"/>
+          <line x1="22" y1="60" x2="128" y2="60" stroke="#3fb950" stroke-width="9" stroke-linecap="round" opacity=".3"/>
+          <line x1="22" y1="60" x2="128" y2="60" stroke="#3fb950" stroke-width="2"/>
+          <path d="M128,60 Q186,62 226,74" fill="none" stroke="#d29922" stroke-width="7" stroke-linecap="round" opacity=".3"/>
+          <path d="M128,60 Q186,62 226,74" fill="none" stroke="#d29922" stroke-width="2"/>
+          <path d="M226,74 Q256,78 276,88" fill="none" stroke="#f85149" stroke-width="5" stroke-linecap="round" opacity=".3"/>
+          <path d="M226,74 Q256,78 276,88" fill="none" stroke="#f85149" stroke-width="2"/>
+          <line x1="22" y1="60" x2="296" y2="60" stroke="#30363d" stroke-dasharray="5 4"/>
+          <g fill="#0d1117" stroke="#58a6ff" stroke-width="2">
+            <circle cx="22" cy="60" r="6"/><circle cx="128" cy="60" r="6"/><circle cx="226" cy="74" r="5"/>
+          </g>
+          <rect x="276" y="80" width="16" height="16" rx="3" fill="#1f6feb33" stroke="#58a6ff" stroke-width="1.6"/>
+          <text x="300" y="60" fill="#6e7b8a" font-size="9" font-family="system-ui">0 mm</text>
+          <text x="294" y="104" fill="#f85149" font-size="9" font-family="system-ui">δ</text>
+        </svg>
+      </div>
+      <div class="body">
+        <h3>Robot Arm Load &amp; Link-Length Calculator</h3>
+        <p>A browser tool that sizes a serial robot arm against three independent limits — bending stress, actuator torque and tip deflection — with a 20-entry servo and stepper database, automatic component mass accounting, and diagrams that redraw to scale as you change inputs.</p>
+        <ul class="chips">
+          <li class="chip live">Live tool</li>
+          <li class="chip">Beam theory</li>
+          <li class="chip">JavaScript · SVG</li>
+          <li class="chip">Offline capable</li>
+        </ul>
+        <div class="btn-row">
+          <a class="btn prim" href="projects/robot-arm.html">Case study →</a>
+          <a class="btn sm" href="tools/armActuatorCalculation.html">Open tool</a>
+          <a class="btn sm" href="tools/armToolExplanation.html">Method</a>
+        </div>
+      </div>
+    </article>
+
+    <!-- ============ TEMPLATE FOR PROJECT 2 ============
+         Copy the article above, swap the thumb SVG, text and links. -->
+    <article class="card ghost">
+      <div class="body">
+        <h3>Next project</h3>
+        <p>Space reserved for the next tool. The pattern stays the same: a working artefact plus a case study that explains the reasoning, states the assumptions and admits the limits.</p>
+        <ul class="chips"><li class="chip wip">In progress</li></ul>
+      </div>
+    </article>
+
+  </div>
+
+  <div class="panel note">
+    <h3>How these are documented</h3>
+    <p>Every project follows the same two-part structure, because a tool without context is just a widget and an explanation without evidence is just a claim.</p>
+    <ol class="steps">
+      <li><strong>Evidence</strong> — the artefact itself, embedded and usable: a live tool, a dataset, a drawing set or a test result.</li>
+      <li><strong>Explanation</strong> — the brief, the approach, the engineering reasoning, the validation plan and an honest account of what the work does <em>not</em> cover.</li>
+    </ol>
+  </div>
+</main>
+
+<footer class="site"><div>
+  <span>© <span id="yr"></span> Your Name</span>
+  <span><a href="index.html">Home</a> · <a href="https://github.com/">GitHub</a></span>
+</div></footer>
+
+<script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
+</body>
+</html>

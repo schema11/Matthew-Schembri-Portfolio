@@ -20,7 +20,7 @@
   .wrap{display:grid; grid-template-columns:260px minmax(0,1fr); gap:2.5rem;
         max-width:1300px; margin:0 auto; padding:2rem 1.25rem 5rem;}
   /* ---- sidebar ---- */
-  nav{position:sticky; top:1.5rem; align-self:start; max-height:calc(100vh - 3rem); overflow-y:auto;
+  nav{position:sticky; top:5rem; align-self:start; max-height:calc(100vh - 6rem); overflow-y:auto;
       border-left:2px solid var(--line); padding-left:1rem; font-size:.875rem;}
   nav strong{display:block; color:var(--tx2); text-transform:uppercase; letter-spacing:.08em;
              font-size:.72rem; margin:1.25rem 0 .5rem;}
@@ -91,6 +91,20 @@
 </style>
 </head>
 <body>
+<header style="position:sticky;top:0;z-index:30;display:flex;flex-wrap:wrap;gap:.75rem;
+ align-items:center;justify-content:space-between;background:#0d1117f2;backdrop-filter:blur(8px);
+ border-bottom:1px solid #30363d;padding:.7rem 1.25rem;
+ font:15px/1.5 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif">
+  <span style="font-size:.84rem;color:#9aa7b4">📘 Build specification &amp; method — Robot Arm Calculator</span>
+  <span style="display:flex;gap:.5rem;flex-wrap:wrap">
+    <a href="../tools.html" style="display:inline-flex;align-items:center;gap:.4rem;text-decoration:none;
+      background:#1c2330;color:#e6edf3;border:1px solid #30363d;border-radius:7px;
+      padding:.4rem .75rem;font-size:.82rem">← Portfolio tools</a>
+    <a href="armActuatorCalculation.html" style="display:inline-flex;align-items:center;gap:.4rem;text-decoration:none;
+      background:#1f6feb1a;color:#58a6ff;border:1px solid #1f6feb66;border-radius:7px;
+      padding:.4rem .75rem;font-size:.82rem">⚙️ Open the live calculator →</a>
+  </span>
+</header>
 <div class="wrap">
 
 <nav>
