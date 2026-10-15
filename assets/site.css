@@ -171,6 +171,7 @@ footer.site a{color:var(--muted)}
 .videowrap{margin:1.25rem 0;background:#000;border:1px solid var(--line);
   border-radius:12px;overflow:hidden}
 .videowrap video,.videowrap iframe{display:block;width:100%;aspect-ratio:16/9;border:0;background:#000}
+.videowrap.short iframe{max-width:360px;aspect-ratio:9/16;margin-inline:auto}
 .videowrap figcaption{padding:.7rem .9rem;font-size:.8rem;color:var(--muted);
   background:var(--panel);border-top:1px solid var(--line)}
 
