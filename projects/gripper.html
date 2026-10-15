@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="University project: design, calculation, manufacture and testing of a robotic gripper — background, calculations, mechanical concept and final product.">
+  <title>Robotic Gripper Project | Portfolio</title>
+  <link rel="stylesheet" href="../assets/site.css">
+</head>
+<body>
+
+<nav class="nav" aria-label="Main">
+  <div class="nav-in">
+    <a class="brand" href="../index.html"><span class="mark">◆</span> Your Name</a>
+    <ul>
+      <li><a href="../index.html">Home</a></li>
+      <li><a href="../tools.html" aria-current="page">Tools</a></li>
+      <li><a href="../tools.html#projects">Projects</a></li>
+    </ul>
+  </div>
+</nav>
+
+<main class="narrow">
+  <p class="eyebrow"><a href="../tools.html" style="color:inherit;text-decoration:none">Tools</a> → Project 02</p>
+  <h1>Robotic Gripper — design, build &amp; test</h1>
+  <p class="lede">A university mechatronics project: design a gripper, size its actuator and transmission, model it in SolidWorks, 3D print it, and demonstrate it picking and placing a real object. This page documents the engineering reasoning alongside the evidence that it worked.</p>
+
+  <dl class="meta">
+    <dt>Context</dt><dd>TODO — course name and code, year/semester</dd>
+    <dt>Role</dt><dd>TODO — e.g. mechanical design and CAD; team of four</dd>
+    <dt>Tools</dt><dd>SolidWorks · FDM 3D printing · TODO microcontroller</dd>
+    <dt>Status</dt><dd><span class="chip ok">Built &amp; tested</span></dd>
+    <dt>Date</dt><dd>TODO — Month Year</dd>
+  </dl>
+
+  <!-- ===================== TABS ===================== -->
+  <div class="tabs" role="tablist" aria-label="Project sections">
+    <button role="tab" id="tab-background"  aria-controls="panel-background"  aria-selected="true">① Background knowledge</button>
+    <button role="tab" id="tab-calculations" aria-controls="panel-calculations" aria-selected="false">② Calculations</button>
+    <button role="tab" id="tab-concept"      aria-controls="panel-concept"      aria-selected="false">③ Mechanical concept</button>
+    <button role="tab" id="tab-final"        aria-controls="panel-final"        aria-selected="false">④ Final product</button>
+  </div>
+
+  <!-- ============ ① BACKGROUND ============ -->
+  <section class="tabpanel" role="tabpanel" id="panel-background" aria-labelledby="tab-background" tabindex="0">
+    <h2>What a gripper has to do</h2>
+    <p class="todo">TODO — in your own words: the brief you were given, the object to be handled, its mass and geometry, and the cycle required.</p>
+
+    <h3>Gripper classification</h3>
+    <p>Industrial grippers are usually grouped by how they hold the object, which frames the design choice before any dimensions are set:</p>
+    <ul>
+      <li><strong>Impactive</strong> — jaws clamp directly onto the object. Simple, tolerant, the common choice for printed prototypes.</li>
+      <li><strong>Ingressive</strong> — pins or needles penetrate the surface. Used for textiles and fibrous material.</li>
+      <li><strong>Astrictive</strong> — suction, magnetic or electrostatic attraction, with no enveloping jaws.</li>
+      <li><strong>Contigutive</strong> — direct contact adhesion, such as glue or freezing.</li>
+    </ul>
+    <p class="todo">TODO — state which class you chose and why, referencing the object's surface, rigidity and tolerance to clamping force.</p>
+
+    <h3>Mechanism options considered</h3>
+    <table class="spec-tbl">
+      <thead><tr><th>Mechanism</th><th>Behaviour</th><th>Why it was / wasn't chosen</th></tr></thead>
+      <tbody>
+        <tr><td>Parallel linkage</td><td>Jaws stay parallel through travel</td><td class="todo">TODO</td></tr>
+        <tr><td>Pivoting (scissor) jaws</td><td>Angular closure, simplest to print</td><td class="todo">TODO</td></tr>
+        <tr><td>Rack &amp; pinion</td><td>Linear, symmetric, good force transfer</td><td class="todo">TODO</td></tr>
+        <tr><td>Cam / worm drive</td><td>Self-locking, holds without power</td><td class="todo">TODO</td></tr>
+      </tbody>
+    </table>
+
+    <h3>The gripper as a mechatronic system</h3>
+    <p>Treating it as a complete system rather than a mechanism keeps the interfaces honest: <strong>sensing</strong> (position, force or current feedback), <strong>actuation</strong> (motor, transmission, mechanism), <strong>control</strong> (open/closed loop, how grip force is commanded) and <strong>power</strong>.</p>
+    <p class="todo">TODO — a sentence on each for your build.</p>
+
+    <h3>Attaching the load to the motor shaft</h3>
+    <p>How torque actually crosses from shaft to mechanism determines whether the design survives: set screw onto a D-shaft or flat, keyed shaft, interference fit, clamp or split hub, or a moulded servo horn and spline. A printed hub on a smooth round shaft slips — the failure is invariably at this interface rather than in the structure.</p>
+    <p class="todo">TODO — the method you used and how it performed.</p>
+
+    <h3>Gearing</h3>
+    <p>Spur gearing trades speed for torque at the ratio: output torque multiplies while output speed divides, minus efficiency losses. The imperfections matter more than the ideal ratio in a printed assembly — <strong>backlash</strong> from layer resolution and clearance, tooth profile error, centre-distance error from print shrinkage, and wear on plastic flanks under load.</p>
+    <p class="todo">TODO — your ratio, module, tooth counts, and measured backlash if you took it.</p>
+
+    <h3>Designing for FDM printing</h3>
+    <ul>
+      <li>Orient parts so load runs <strong>in-plane</strong>, never across layer boundaries.</li>
+      <li>Perimeters carry bending load far more efficiently than infill — four walls beats dense infill per gram.</li>
+      <li>Allow clearance at moving joints (typically 0.2–0.4 mm) and plan for a reaming pass.</li>
+      <li>Avoid unsupported overhangs beyond ~45°; design fillets at stress risers rather than sharp internal corners.</li>
+      <li>Use heat-set inserts or captive nuts rather than threading directly into plastic.</li>
+      <li>PLA creeps under sustained load and softens near 55 °C — relevant if a motor sits against the part.</li>
+    </ul>
+
+    <h3>Safety</h3>
+    <p class="todo">TODO — workshop induction completed, PPE, pinch-point and stored-energy hazards in your mechanism, and how you mitigated them.</p>
+  </section>
+
+  <!-- ============ ② CALCULATIONS ============ -->
+  <section class="tabpanel" role="tabpanel" id="panel-calculations" aria-labelledby="tab-calculations" tabindex="0" hidden>
+    <h2>Design calculations</h2>
+    <p>Each calculation below states the requirement, the working, and the design decision it drove.</p>
+
+    <h3>1 · Required grip force</h3>
+    <p>For a friction grip holding mass <em>m</em> between two jaws, with coefficient of friction <em>μ</em> and safety factor <em>n</em>:</p>
+    <div class="panel"><p style="font-family:var(--mono);font-size:.9rem;margin:0">
+      F<sub>grip</sub> ≥ n · m · g / (2 μ)
+    </p></div>
+    <table class="spec-tbl">
+      <thead><tr><th>Quantity</th><th>Value</th><th>Source / note</th></tr></thead>
+      <tbody>
+        <tr><td>Object mass m</td><td class="todo">TODO kg</td><td>Measured</td></tr>
+        <tr><td>Friction coefficient μ</td><td class="todo">TODO</td><td>Jaw pad vs object material</td></tr>
+        <tr><td>Safety factor n</td><td class="todo">TODO</td><td>Covers acceleration and slip margin</td></tr>
+        <tr><td><strong>Required grip force</strong></td><td class="todo"><strong>TODO N</strong></td><td>Per jaw</td></tr>
+      </tbody>
+    </table>
+    <p class="todo">TODO — note whether acceleration during transfer was included, since snatching the object multiplies the required force.</p>
+
+    <h3>2 · Mechanism force transfer</h3>
+    <p class="todo">TODO — the relationship between actuator output and jaw force for your mechanism (lever ratio, rack radius or linkage geometry), and the mechanical advantage achieved.</p>
+
+    <h3>3 · Motor torque &amp; gear ratio</h3>
+    <p class="todo">TODO — required output torque, selected motor/servo and its rating, resulting ratio, and the speed consequence.</p>
+
+    <h3>4 · Structural check</h3>
+    <p class="todo">TODO — bending stress in the jaw or finger at full grip force, against the allowable stress for your printed material with a knockdown factor applied.</p>
+
+    <div class="panel note">
+      <h3>Related tool I built</h3>
+      <p>Working through the actuator and structural sizing by hand for this project is what prompted me to build a general calculator for serial arms — it checks bending stress, actuator torque and deflection together and includes a servo database.</p>
+      <div class="btn-row">
+        <a class="btn prim" href="robot-arm.html">Robot arm calculator case study →</a>
+        <a class="btn sm" href="../Tools/armActuatorCalculation.html">Open the tool</a>
+      </div>
+    </div>
+
+    <h3>Calculation summary</h3>
+    <table class="spec-tbl">
+      <thead><tr><th>Parameter</th><th>Calculated</th><th>As built / measured</th></tr></thead>
+      <tbody>
+        <tr><td>Grip force</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Jaw travel</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Actuator torque</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Gear ratio</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Close time</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Total mass</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+      </tbody>
+    </table>
+    <p class="todo">TODO — comment on any discrepancy between calculated and measured, and what it tells you about the assumptions.</p>
+  </section>
+
+  <!-- ============ ③ MECHANICAL CONCEPT ============ -->
+  <section class="tabpanel" role="tabpanel" id="panel-concept" aria-labelledby="tab-concept" tabindex="0" hidden>
+    <h2>Concept development</h2>
+    <p class="todo">TODO — how the design evolved from sketch to final CAD, and what each iteration fixed.</p>
+
+    <h3>Concept sketches &amp; iterations</h3>
+    <div class="media-grid">
+      <figure>
+        <img src="../assets/media/gripper/concept-01.jpg" alt="Initial hand sketch of the gripper mechanism" loading="lazy"
+             data-cap="Concept 1 — TODO describe the arrangement and its problem.">
+        <figcaption>Concept 1 — <span class="todo">TODO</span></figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/media/gripper/concept-02.jpg" alt="Revised mechanism sketch" loading="lazy"
+             data-cap="Concept 2 — TODO what changed and why.">
+        <figcaption>Concept 2 — <span class="todo">TODO</span></figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/media/gripper/concept-03.jpg" alt="Selected concept" loading="lazy"
+             data-cap="Selected concept — TODO the deciding factor.">
+        <figcaption>Selected concept — <span class="todo">TODO</span></figcaption>
+      </figure>
+    </div>
+
+    <h3>CAD model</h3>
+    <p class="todo">TODO — modelling approach: base sketch, extrusions, features, hole wizard for fasteners, fillets, then assembly with mates. Note any design-for-print decisions visible in the model.</p>
+    <div class="media-grid wide">
+      <figure>
+        <img src="../assets/media/gripper/cad-assembly.jpg" alt="SolidWorks assembly of the gripper" loading="lazy"
+             data-cap="Full assembly — TODO part count and key mates.">
+        <figcaption>Full assembly in SolidWorks</figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/media/gripper/cad-jaw.jpg" alt="SolidWorks part model of a gripper jaw" loading="lazy"
+             data-cap="Jaw part — TODO note the fillet at the root and the print orientation chosen.">
+        <figcaption>Jaw part detail</figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/media/gripper/cad-exploded.jpg" alt="Exploded view of the gripper assembly" loading="lazy"
+             data-cap="Exploded view showing assembly order and fasteners.">
+        <figcaption>Exploded view</figcaption>
+      </figure>
+    </div>
+
+    <h3>Mechanism demonstration</h3>
+    <p>A short motion study showing the jaws travelling through their full range before any part was printed.</p>
+    <figure class="videowrap">
+      <video controls preload="metadata" poster="../assets/media/gripper/motion-poster.jpg">
+        <source src="../assets/media/gripper/motion-study.mp4" type="video/mp4">
+        Your browser cannot play this video. <a href="../assets/media/gripper/motion-study.mp4">Download it instead</a>.
+      </video>
+      <figcaption>SolidWorks motion study — <span class="todo">TODO what it verified (travel, interference, over-centre behaviour)</span>.</figcaption>
+    </figure>
+
+    <h3>Manufacture</h3>
+    <p class="todo">TODO — print settings (material, layer height, perimeters, infill, orientation, supports), post-processing, and anything that needed reprinting.</p>
+    <div class="media-grid">
+      <figure>
+        <img src="../assets/media/gripper/build-01.jpg" alt="Parts fresh off the printer" loading="lazy"
+             data-cap="Printed parts before cleanup.">
+        <figcaption>Printed parts</figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/media/gripper/build-02.jpg" alt="Gripper during assembly" loading="lazy"
+             data-cap="Assembly — TODO note the fastener and insert approach.">
+        <figcaption>Assembly</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ============ ④ FINAL PRODUCT ============ -->
+  <section class="tabpanel" role="tabpanel" id="panel-final" aria-labelledby="tab-final" tabindex="0" hidden>
+    <h2>The working gripper</h2>
+
+    <figure class="videowrap">
+      <video controls preload="metadata" poster="../assets/media/gripper/demo-poster.jpg">
+        <source src="../assets/media/gripper/demo.mp4" type="video/mp4">
+        Your browser cannot play this video. <a href="../assets/media/gripper/demo.mp4">Download it instead</a>.
+      </video>
+      <figcaption><strong>Demonstration</strong> — <span class="todo">TODO what is happening: object, mass, cycle, and the result</span>.</figcaption>
+    </figure>
+
+    <h3>Finished build</h3>
+    <div class="media-grid wide">
+      <figure>
+        <img src="../assets/media/gripper/final-01.jpg" alt="Completed gripper, open" loading="lazy"
+             data-cap="Completed gripper, jaws open.">
+        <figcaption>Jaws open</figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/media/gripper/final-02.jpg" alt="Completed gripper holding the object" loading="lazy"
+             data-cap="Holding the test object at full grip force.">
+        <figcaption>Holding the test object</figcaption>
+      </figure>
+      <figure>
+        <img src="../assets/media/gripper/final-03.jpg" alt="Gripper mounted on the arm" loading="lazy"
+             data-cap="Mounted on the arm — TODO interface detail.">
+        <figcaption>Mounted</figcaption>
+      </figure>
+    </div>
+
+    <h3>Test results</h3>
+    <table class="spec-tbl">
+      <thead><tr><th>Test</th><th>Target</th><th>Result</th><th>Pass</th></tr></thead>
+      <tbody>
+        <tr><td>Lift test object without slip</td><td class="todo">TODO</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Repeated pick-and-place cycles</td><td class="todo">TODO</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Maximum object mass before slip</td><td class="todo">TODO</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Jaw travel / opening</td><td class="todo">TODO</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+      </tbody>
+    </table>
+
+    <h3>Reflection</h3>
+    <div class="panel note">
+      <p><strong>What worked.</strong> <span class="todo">TODO</span></p>
+      <p><strong>What I would change.</strong> <span class="todo">TODO — be specific: a dimension, a material, a mechanism choice.</span></p>
+      <p><strong>What the discrepancies taught me.</strong> <span class="todo">TODO — where calculation and reality diverged, and the assumption responsible.</span></p>
+    </div>
+
+    <h3>Downloads</h3>
+    <div class="btn-row">
+      <a class="btn sm" href="../assets/media/gripper/gripper-drawing.pdf">📄 Drawing set (PDF)</a>
+      <a class="btn sm" href="../assets/media/gripper/gripper-stl.zip">⬇ STLs (ZIP)</a>
+    </div>
+    <p class="muted" style="font-size:.82rem">Remove either button if you'd rather not publish the files.</p>
+  </section>
+
+  <hr>
+  <div class="btn-row">
+    <a class="btn" href="../tools.html">← All projects</a>
+    <a class="btn prim" href="robot-arm.html">Next: Robot arm calculator →</a>
+  </div>
+</main>
+
+<!-- lightbox -->
+<div id="lb" role="dialog" aria-modal="true" aria-label="Enlarged image">
+  <button type="button" aria-label="Close">✕ Close</button>
+  <div><img alt=""><p></p></div>
+</div>
+
+<footer class="site"><div>
+  <span>© <span id="yr"></span> Your Name</span>
+  <span><a href="../index.html">Home</a> · <a href="../tools.html">Tools</a></span>
+</div></footer>
+
+<script>
+document.getElementById('yr').textContent=new Date().getFullYear();
+
+/* ---- tabs with shareable URLs ---- */
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+function show(name,push){
+  const id='tab-'+name;
+  if(!tabs.some(t=>t.id===id))name=tabs[0].id.slice(4);
+  tabs.forEach(t=>{
+    const on=t.id==='tab-'+name;
+    t.setAttribute('aria-selected',on?'true':'false');
+    document.getElementById(t.getAttribute('aria-controls')).hidden=!on;
+  });
+  document.querySelectorAll('.tabpanel video').forEach(v=>{
+    if(v.closest('.tabpanel').hidden&&!v.paused)v.pause();
+  });
+  if(push&&location.hash.slice(1)!==name)history.replaceState(null,'','#'+name);
+}
+tabs.forEach((t,i)=>{
+  t.addEventListener('click',()=>show(t.id.slice(4),true));
+  t.addEventListener('keydown',e=>{
+    const d=e.key==='ArrowRight'?1:e.key==='ArrowLeft'?-1:0;
+    if(!d)return;
+    e.preventDefault();
+    const n=tabs[(i+d+tabs.length)%tabs.length];
+    n.focus();show(n.id.slice(4),true);
+  });
+});
+show(location.hash.slice(1)||'background',false);
+window.addEventListener('hashchange',()=>show(location.hash.slice(1),false));
+
+/* ---- lightbox ---- */
+const lb=document.getElementById('lb'),lbImg=lb.querySelector('img'),lbCap=lb.querySelector('p');
+document.addEventListener('click',e=>{
+  const img=e.target.closest('.media-grid img');
+  if(img){lbImg.src=img.src;lbImg.alt=img.alt;lbCap.textContent=img.dataset.cap||img.alt;lb.classList.add('on');
+    lb.querySelector('button').focus();return;}
+  if(e.target.closest('#lb'))lb.classList.remove('on');
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')lb.classList.remove('on');});
+</script>
+</body>
+</html>

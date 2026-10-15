@@ -142,3 +142,52 @@ footer.site a{color:var(--muted)}
 
 @media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto}
   .btn:hover,.card:hover{transform:none}}
+
+  /* ============ tabs ============ */
+.tabs{display:flex;flex-wrap:wrap;gap:.3rem;margin:1.75rem 0 0;padding:.3rem;
+  background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+  position:sticky;top:3.3rem;z-index:20;backdrop-filter:blur(8px)}
+.tabs button{flex:1 1 auto;min-width:max-content;background:none;border:1px solid transparent;
+  color:var(--muted);font:inherit;font-size:.86rem;padding:.5rem .85rem;border-radius:7px;
+  cursor:pointer;transition:.15s;white-space:nowrap}
+.tabs button:hover{color:var(--text);background:#ffffff08}
+.tabs button[aria-selected="true"]{background:#1f6feb26;color:var(--accent);border-color:#1f6feb66}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tabpanel{padding-top:.5rem}
+.tabpanel[hidden]{display:none}
+.tabpanel>h2:first-of-type{margin-top:1.5rem}
+
+/* ============ media ============ */
+.media-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+  gap:.9rem;margin:1.25rem 0}
+.media-grid figure{margin:0;background:var(--panel);border:1px solid var(--line);
+  border-radius:11px;overflow:hidden}
+.media-grid img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;
+  background:var(--panel2);cursor:zoom-in;transition:opacity .15s}
+.media-grid img:hover{opacity:.85}
+.media-grid figcaption{padding:.55rem .7rem;font-size:.78rem;color:var(--muted);line-height:1.45}
+.media-grid.wide{grid-template-columns:repeat(auto-fill,minmax(330px,1fr))}
+
+.videowrap{margin:1.25rem 0;background:#000;border:1px solid var(--line);
+  border-radius:12px;overflow:hidden}
+.videowrap video,.videowrap iframe{display:block;width:100%;aspect-ratio:16/9;border:0;background:#000}
+.videowrap figcaption{padding:.7rem .9rem;font-size:.8rem;color:var(--muted);
+  background:var(--panel);border-top:1px solid var(--line)}
+
+/* ============ lightbox ============ */
+#lb{position:fixed;inset:0;z-index:200;display:none;place-items:center;
+  background:#0d1117f2;backdrop-filter:blur(6px);padding:1.5rem;cursor:zoom-out}
+#lb.on{display:grid}
+#lb img{max-width:100%;max-height:82vh;border-radius:10px;border:1px solid var(--line)}
+#lb p{margin:.8rem 0 0;color:var(--muted);font-size:.84rem;text-align:center;max-width:70ch}
+#lb button{position:absolute;top:1rem;right:1rem;background:var(--panel2);color:var(--text);
+  border:1px solid var(--line);border-radius:8px;padding:.4rem .7rem;font-size:.85rem;cursor:pointer}
+
+/* ============ small extras ============ */
+.spec-tbl{width:100%;border-collapse:collapse;font-size:.86rem;margin:1.1rem 0}
+.spec-tbl th,.spec-tbl td{border:1px solid var(--line);padding:.45rem .6rem;text-align:left}
+.spec-tbl th{background:var(--panel2);color:var(--muted);font-weight:600;font-size:.78rem;
+  text-transform:uppercase;letter-spacing:.05em}
+.spec-tbl td:first-child{color:var(--muted)}
+.todo{color:var(--warn);font-style:italic}
+@media(max-width:700px){.tabs{position:static}}
