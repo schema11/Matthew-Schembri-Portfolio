@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Robot Arm Load &amp; Link-Length Calculator — Live</title>
+<meta name="description" content="Interactive robot arm calculator: payload limit, permissible link lengths, bending stress, motor torque and tip deflection with live scaled diagrams.">
+<style>
+:root{--bg:#0d1117;--p1:#161b22;--p2:#1c2330;--ln:#30363d;--tx:#e6edf3;--t2:#9aa7b4;
+--ac:#58a6ff;--ok:#3fb950;--wn:#d29922;--bd:#f85149;--mono:ui-monospace,SFMono-Regular,Consolas,monospace}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+header{border-bottom:1px solid var(--ln);background:linear-gradient(180deg,#161b22,#0d1117);padding:1.1rem 1.25rem}
+.hd{max-width:1480px;margin:0 auto;display:flex;flex-wrap:wrap;gap:1rem;align-items:center;justify-content:space-between}
+h1{font-size:1.2rem;margin:0}
+h1 small{display:block;font-weight:400;font-size:.76rem;color:var(--t2);margin-top:.15rem}
+.wrap{max-width:1480px;margin:0 auto;padding:1.25rem;display:grid;grid-template-columns:minmax(0,380px) minmax(0,1fr);gap:1.25rem;align-items:start}
+.col-r{position:sticky;top:1rem}
+.panel{background:var(--p1);border:1px solid var(--ln);border-radius:10px;padding:.9rem 1rem;margin-bottom:1rem}
+.panel>h2{font-size:.78rem;text-transform:uppercase;letter-spacing:.09em;color:var(--t2);margin:0 0 .7rem;font-weight:600}
+/* buttons / modes */
+.btn{background:var(--p2);color:var(--tx);border:1px solid var(--ln);border-radius:7px;padding:.4rem .7rem;font-size:.8rem;cursor:pointer}
+.btn:hover{border-color:var(--ac)}
+.btn.sm{padding:.25rem .5rem;font-size:.72rem}
+.modes{display:flex;gap:.4rem;background:var(--p2);border:1px solid var(--ln);border-radius:8px;padding:.25rem}
+.modes button{flex:1;background:none;border:0;color:var(--t2);font-size:.8rem;padding:.4rem .6rem;border-radius:6px;cursor:pointer;white-space:nowrap}
+.modes button.on{background:#1f6feb33;color:var(--ac);box-shadow:inset 0 0 0 1px #1f6feb66}
+/* fields */
+.g{display:grid;grid-template-columns:1fr;gap:.45rem}
+.nr{display:grid;grid-template-columns:1fr 92px;gap:.35rem .5rem;align-items:center}
+.nr>span{grid-column:1/-1;font-size:.76rem;color:var(--t2);display:flex;justify-content:space-between;gap:.5rem}
+.nr>span em{font-style:normal;color:#6e7b8a}
+.nr.full{grid-template-columns:1fr}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:var(--ln);border-radius:4px;outline:none;margin:.3rem 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:15px;height:15px;border-radius:50%;background:var(--ac);cursor:pointer;border:2px solid #0d1117}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border-radius:50%;background:var(--ac);cursor:pointer;border:2px solid #0d1117}
+input[type=number],select{background:#010409;color:var(--tx);border:1px solid var(--ln);border-radius:6px;padding:.3rem .4rem;font:inherit;font-size:.8rem;width:100%}
+input[type=number]:focus,select:focus{outline:none;border-color:var(--ac)}
+input:disabled,select:disabled{opacity:.42;cursor:not-allowed}
+label.ck{display:flex;align-items:center;gap:.5rem;font-size:.8rem;color:var(--t2)}
+/* link cards */
+.lc{background:var(--p1);border:1px solid var(--ln);border-radius:10px;margin-bottom:.7rem;overflow:hidden}
+.lch{display:flex;align-items:center;justify-content:space-between;gap:.5rem;background:var(--p2);padding:.5rem .75rem;border-bottom:1px solid var(--ln)}
+.lch b{font-size:.85rem}.lch b small{color:var(--t2);font-weight:400}
+.lcl{font-family:var(--mono);font-size:.78rem;color:var(--ac)}
+.lcb{display:grid;grid-template-columns:minmax(0,1fr) 124px;gap:.75rem;padding:.75rem}
+.secbox{border:1px dashed var(--ln);border-radius:8px;padding:.3rem;text-align:center}
+.secbox svg{display:block;width:100%;height:auto}
+.secbox div{font-size:.68rem;color:var(--t2);font-family:var(--mono);margin-top:.2rem;line-height:1.3}
+/* results */
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:.6rem}
+.kpi{background:var(--p2);border:1px solid var(--ln);border-radius:9px;padding:.6rem .7rem}
+.kpi span{display:block;font-size:.68rem;text-transform:uppercase;letter-spacing:.06em;color:var(--t2)}
+.kpi b{display:block;font-size:1.3rem;line-height:1.3;font-family:var(--mono)}
+.kpi i{font-style:normal;font-size:.72rem;color:var(--t2)}
+.kpi.hero{border-color:#1f6feb66;background:#1f6feb1a}
+.kpi.hero b{color:var(--ac)}
+.v-ok{color:var(--ok)}.v-wn{color:var(--wn)}.v-bd{color:var(--bd)}
+.chip{display:inline-block;font-size:.7rem;padding:.12rem .5rem;border-radius:99px;border:1px solid var(--ln);color:var(--t2)}
+.chip.ok{color:var(--ok);border-color:#3fb95066;background:#3fb9501a}
+.chip.wn{color:var(--wn);border-color:#d2992266;background:#d299221a}
+.chip.bd{color:var(--bd);border-color:#f8514966;background:#f851491a}
+figure{margin:0;background:var(--p1);border:1px solid var(--ln);border-radius:10px;padding:.5rem}
+figure svg{display:block;width:100%;height:auto}
+figcaption{font-size:.74rem;color:var(--t2);text-align:center;padding:.35rem 0 .1rem}
+.legend{display:flex;flex-wrap:wrap;gap:.9rem;justify-content:center;font-size:.72rem;color:var(--t2);padding:.2rem 0 .35rem}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:.3rem;vertical-align:-1px}
+.scroll{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.78rem;min-width:620px}
+th,td{border:1px solid var(--ln);padding:.35rem .5rem;text-align:right;white-space:nowrap}
+th{background:var(--p2);color:var(--t2);font-weight:600;font-size:.72rem}
+th:first-child,td:first-child{text-align:left}
+td{font-family:var(--mono)}
+.bar{position:relative;height:14px;background:#010409;border-radius:3px;overflow:hidden;min-width:70px}
+.bar>i{position:absolute;inset:0 auto 0 0;border-radius:3px}
+.bar>span{position:absolute;inset:0;font-size:.66rem;line-height:14px;text-align:center;color:#e6edf3;text-shadow:0 0 3px #000}
+ul.adv{margin:.3rem 0 0;padding-left:1.1rem;font-size:.82rem}
+ul.adv li{margin-bottom:.3rem}
+details{font-size:.82rem;color:var(--t2)}
+details summary{cursor:pointer;color:var(--ac);font-size:.78rem}
+details pre{font-family:var(--mono);font-size:.74rem;white-space:pre-wrap;background:#010409;border:1px solid var(--ln);border-radius:8px;padding:.7rem;color:#7ee787}
+svg text{font-family:-apple-system,"Segoe UI",Roboto,sans-serif;fill:#e6edf3;font-size:12px}
+svg .lbl{fill:#9aa7b4;font-size:11px}
+svg .dim{stroke:#30363d;stroke-width:1}
+footer{border-top:1px solid var(--ln);margin-top:1rem;padding:1rem 1.25rem 2.5rem;color:var(--t2);font-size:.76rem}
+footer div{max-width:1480px;margin:0 auto}
+@media(max-width:1080px){.wrap{grid-template-columns:1fr}.col-r{position:static}}
+</style>
+</head>
+<body>
+
+<header><div class="hd">
+  <h1>Robot Arm Load &amp; Link-Length Calculator<small>Live bending · torque · deflection model — fully offline</small></h1>
+  <div style="display:flex;gap:.4rem;flex-wrap:wrap">
+    <button class="btn sm" id="bPreset1">Preset: PLA desktop</button>
+    <button class="btn sm" id="bPreset2">PETG mid</button>
+    <button class="btn sm" id="bPreset3">Steel tube</button>
+    <button class="btn sm" id="bCsv">⬇ CSV</button>
+    <button class="btn sm" id="bLink">🔗 Share</button>
+  </div>
+</div></header>
+
+<div class="wrap">
+<!-- ================= INPUTS ================= -->
+<div class="col-l">
+  <div class="panel">
+    <h2>Mode</h2>
+    <div class="modes">
+      <button id="mLoad" class="on">① Find load limit</button>
+      <button id="mLen">② Find link lengths</button>
+    </div>
+    <p id="modeHelp" style="font-size:.78rem;color:var(--t2);margin:.6rem 0 0"></p>
+  </div>
+
+  <div class="panel"><h2>Global inputs</h2><div class="g" id="globals"></div></div>
+
+  <div class="panel" style="padding-bottom:.4rem">
+    <h2>Links &amp; joints <span class="chip" id="chipN"></span></h2>
+    <div id="links"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Dynamics check (optional)</h2>
+    <label class="ck"><input type="checkbox" id="dynOn"> Include inertia torque (J·α)</label>
+    <div class="g" id="dyn" style="margin-top:.55rem"></div>
+    <p style="font-size:.74rem;color:var(--t2);margin:.5rem 0 0">Computed with K<sub>d</sub>=1 to avoid double-counting; compare against the static result.</p>
+  </div>
+</div>
+
+<!-- ================= OUTPUTS ================= -->
+<div class="col-r">
+  <figure>
+    <svg id="arm" viewBox="0 0 980 330" role="img" aria-label="Scaled robot arm diagram with deflected shape"></svg>
+    <div class="legend">
+      <span><i style="background:#3fb950"></i>util &lt; 0.6</span>
+      <span><i style="background:#d29922"></i>0.6–0.9</span>
+      <span><i style="background:#f85149"></i>&gt; 0.9</span>
+      <span><i style="background:#30363d"></i>undeflected axis</span>
+      <span><i style="background:#8957e5"></i>deflection budget</span>
+    </div>
+    <figcaption id="armCap"></figcaption>
+  </figure>
+
+  <div class="panel"><h2>Results</h2><div class="kpis" id="kpis"></div>
+    <p id="verdict" style="margin:.75rem 0 0;font-size:.85rem"></p></div>
+
+  <div class="panel"><h2>Per-joint breakdown</h2><div class="scroll" id="tbl"></div></div>
+
+  <div class="panel"><h2>Design advice</h2><ul class="adv" id="advice"></ul></div>
+
+  <div class="panel"><details><summary>Formulas used (plain text)</summary>
+<pre id="formulas">SECTION      A, I about bending axis, c = extreme fibre, Z = I/c
+MASS         m_i = A_i * L_i * 1e-9 * rho_i                      [kg]
+REACH        S_i = sum of L_j for j >= i                         [mm]
+SELF WEIGHT  Sig_i = SUM_j>=i [ m_j*(S_i-S_j+L_j/2) + P_j*(S_i-S_j+L_j) ]
+DEMAND       M_i = Kd * g * ( Payload*S_i + Sig_i )              [N.mm]
+CAPACITY     V_i = Z_i * yield_i * k / FoS        (bending)      [N.mm]
+             W_i = T_motor_i * ratio_i * eta * 1000 (actuator)   [N.mm]
+             X_i = MIN(V_i, W_i)
+PAYLOAD      P_i = ( X_i/(Kd*g) - Sig_i ) / S_i ; limit = MIN_i  [kg]
+DEFLECTION   F_i  = Kd*g*(Payload + P_i + sum of distal m,P)     [N]
+             Me_i = Kd*g*(Payload*S_i+1 + Sig_i+1)               [N.mm]
+             w_i  = Kd*g*m_i / L_i                               [N/mm]
+             th_i = (F L^2/2 + Me L + w L^3/6)/(E I)             [rad]
+             d_i  = (F L^3/3 + Me L^2/2 + w L^4/8)/(E I)         [mm]
+             droop = SUM d_i + SUM th_i * S_i+1
+DYNAMICS     J_i = SUM_j>=i [ m_j(L_j^2/12 + dcg^2) + P_j*dl^2 ] + Payload*S_i^2
+             T_req = g*(Payload*S_i+Sig_i)/1000 + J_i*alpha      [N.m]
+FREQUENCY    f_n ~ (1/2pi) * sqrt(3 E I / (m L^3))               [Hz]</pre></details></div>
+</div>
+</div>
+
+<footer><div>
+<strong>Disclaimer.</strong> Engineering aid based on idealised Euler–Bernoulli beam theory, a fully extended horizontal worst-case pose and indicative material properties. It ignores stress concentrations, joint/fastener detail, fatigue, creep, thermal softening and torsion. Verify any load-bearing design with FEA and physical testing. Printed-material figures are in-plane (XY) values — calibrate the knockdown factor <code>k</code> against your own test prints.
+</div></footer>
+
+<script>
+/* ============ DATA ============ */
+const MATS={
+ PLA  :{rho:1240,sy:50 ,E:3500  ,tg:55 },
+ ABS  :{rho:1040,sy:40 ,E:2100  ,tg:100},
+ PETG :{rho:1270,sy:50 ,E:2000  ,tg:75 },
+ ASA  :{rho:1070,sy:42 ,E:2000  ,tg:100},
+ Steel:{rho:7850,sy:370,E:200000,tg:400}
+};
+const SECS=['Solid Rod','Hollow Rod','Solid Square','Square Tube','Rectangle','Rect Tube'];
+const HOLLOW=s=>s==='Hollow Rod'||s==='Square Tube'||s==='Rect Tube';
+const RECT=s=>s==='Rectangle'||s==='Rect Tube';
+const ROUND=s=>s==='Solid Rod'||s==='Hollow Rod';
+
+const mkLink=(L,share,mat,sec,d1,d2,t,lump,tq,gr)=>({L,share,mat,sec,d1,d2,t,lump,tq,gr});
+function defaults(){return{
+ mode:'load',N:3,fos:3,k:0.65,g:9.81,kd:1.4,eta:0.9,dmax:1.0,payload:0.5,reach:700,
+ exag:25,dyn:false,omega:90,ta:0.3,
+ links:[
+  mkLink(300,1,'PETG','Rect Tube',30,50,3,0.45,0.45,20),
+  mkLink(250,1,'PETG','Rect Tube',25,40,3,0.30,0.45,15),
+  mkLink(150,0.6,'PETG','Solid Square',22,22,0,0.15,0.25,5),
+  mkLink(120,0.5,'PLA','Solid Rod',16,16,0,0.10,0.15,5),
+  mkLink(100,0.4,'PLA','Solid Rod',14,14,0,0.08,0.12,5),
+  mkLink(80,0.3,'PLA','Solid Rod',12,12,0,0.05,0.10,5)]
+};}
+const PRESETS={
+ 1:{N:3,fos:3.5,k:0.6,kd:1.5,eta:0.85,dmax:1.5,links:[
+   mkLink(220,1,'PLA','Square Tube',30,30,3,0.35,0.35,15),
+   mkLink(180,1,'PLA','Square Tube',25,25,3,0.25,0.35,12),
+   mkLink(120,0.6,'PLA','Solid Square',18,18,0,0.12,0.2,5)]},
+ 2:{N:3,fos:3,k:0.68,kd:1.4,eta:0.9,dmax:1.0,links:[
+   mkLink(320,1,'PETG','Rect Tube',32,55,3.5,0.5,0.9,25),
+   mkLink(260,1,'PETG','Rect Tube',28,45,3,0.35,0.7,20),
+   mkLink(160,0.6,'ASA','Square Tube',24,24,3,0.18,0.3,8)]},
+ 3:{N:3,fos:2.5,k:1,kd:1.6,eta:0.9,dmax:0.5,links:[
+   mkLink(450,1,'Steel','Square Tube',30,30,2,0.9,2.2,30),
+   mkLink(380,1,'Steel','Square Tube',25,25,2,0.6,1.6,25),
+   mkLink(200,0.5,'Steel','Hollow Rod',20,20,2,0.3,0.6,10)]}
+};
+let S=defaults();
+
+/* ============ MECHANICS ============ */
+function sectionProps(sec,d1,d2,t){
+ d1=Math.max(0,+d1||0); d2=Math.max(0,+d2||0); t=Math.max(0,+t||0);
+ let A=0,I=0,c=0,h=0,bad=false;
+ const P4=Math.PI/4,P64=Math.PI/64;
+ if(sec==='Solid Rod'){A=P4*d1*d1;I=P64*d1**4;c=d1/2;h=d1;}
+ else if(sec==='Hollow Rod'){const d=Math.max(0,d1-2*t);A=P4*(d1*d1-d*d);I=P64*(d1**4-d**4);c=d1/2;h=d1;bad=2*t>=d1;}
+ else if(sec==='Solid Square'){A=d1*d1;I=d1**4/12;c=d1/2;h=d1;}
+ else if(sec==='Square Tube'){const b=Math.max(0,d1-2*t);A=d1*d1-b*b;I=(d1**4-b**4)/12;c=d1/2;h=d1;bad=2*t>=d1;}
+ else if(sec==='Rectangle'){A=d1*d2;I=d1*d2**3/12;c=d2/2;h=d2;}
+ else if(sec==='Rect Tube'){const b=Math.max(0,d1-2*t),hh=Math.max(0,d2-2*t);
+   A=d1*d2-b*hh;I=(d1*d2**3-b*hh**3)/12;c=d2/2;h=d2;bad=2*t>=Math.min(d1,d2);}
+ return{A,I,c,Z:c>0?I/c:0,h,bad};
+}
+function buildModel(L){
+ const N=S.N,lk=S.links,m=[],A=[],I=[],Z=[],h=[],E=[],sy=[],rho=[],bad=[];
+ for(let i=0;i<N;i++){
+  const o=lk[i],p=sectionProps(o.sec,o.d1,o.d2,o.t),M=MATS[o.mat]||MATS.PLA;
+  A[i]=p.A;I[i]=p.I;Z[i]=p.Z;h[i]=p.h;bad[i]=p.bad;
+  rho[i]=M.rho;sy[i]=M.sy;E[i]=M.E;
+  m[i]=A[i]*Math.max(0,L[i])*1e-9*M.rho;
+ }
+ const reach=new Array(N+1).fill(0);
+ for(let i=N-1;i>=0;i--)reach[i]=reach[i+1]+Math.max(0,L[i]);
+ const sig=new Array(N+1).fill(0);
+ for(let i=0;i<N;i++){let s=0;
+  for(let j=i;j<N;j++){const d=reach[i]-reach[j];s+=m[j]*(d+L[j]/2)+(+lk[j].lump||0)*(d+L[j]);}
+  sig[i]=s;}
+ const sall=[],V=[],W=[],X=[];
+ for(let i=0;i<N;i++){
+  sall[i]=sy[i]*S.k/S.fos; V[i]=Z[i]*sall[i];
+  W[i]=(+lk[i].tq||0)*(+lk[i].gr||0)*S.eta*1000; X[i]=Math.min(V[i],W[i]);
+ }
+ let mass=0;for(let i=0;i<N;i++)mass+=m[i]+(+lk[i].lump||0);
+ return{N,L,m,A,I,Z,h,E,sy,rho,bad,reach,sig,sall,V,W,X,mass};
+}
+const demand=(M,i,P)=>S.kd*S.g*(P*M.reach[i]+M.sig[i]);
+function utilArr(M,P){const u=[];for(let i=0;i<M.N;i++){const d=demand(M,i,P);
+ u.push({d,us:M.V[i]>0?d/M.V[i]:9,ut:M.W[i]>0?d/M.W[i]:9});}return u;}
+function deflection(M,P){
+ const N=M.N,lk=S.links,th=[],de=[],F=[],Me=[],w=[];
+ for(let i=0;i<N;i++){
+  let distal=0;for(let j=i+1;j<N;j++)distal+=M.m[j]+(+lk[j].lump||0);
+  F[i]=S.kd*S.g*(P+(+lk[i].lump||0)+distal);
+  Me[i]=S.kd*S.g*(P*M.reach[i+1]+M.sig[i+1]);
+  w[i]=M.L[i]>0?S.kd*S.g*M.m[i]/M.L[i]:0;
+  const EI=M.E[i]*M.I[i],Li=Math.max(0,M.L[i]);
+  if(EI>0){th[i]=(F[i]*Li**2/2+Me[i]*Li+w[i]*Li**3/6)/EI;
+           de[i]=(F[i]*Li**3/3+Me[i]*Li**2/2+w[i]*Li**4/8)/EI;}
+  else{th[i]=0;de[i]=0;}
+ }
+ let dtip=0;for(let i=0;i<N;i++)dtip+=de[i]+th[i]*M.reach[i+1];
+ return{th,de,dtip,F,Me,w};
+}
+function strengthPayload(M){
+ let best=Infinity,idx=0;
+ for(let i=0;i<M.N;i++){
+  if(M.reach[i]<=0)continue;
+  const p=Math.max(0,(M.X[i]/(S.kd*S.g)-M.sig[i])/M.reach[i]);
+  if(p<best){best=p;idx=i;}
+ }
+ return{p:isFinite(best)?best:0,idx};
+}
+function deflPayload(M){
+ const f=P=>deflection(M,P).dtip-S.dmax;
+ if(!isFinite(f(0))||f(0)>0)return 0;
+ let hi=0.5,n=0;while(f(hi)<0&&hi<1e5&&n++<50)hi*=2;
+ let lo=0;for(let i=0;i<70;i++){const md=(lo+hi)/2;f(md)<0?lo=md:hi=md;}
+ return lo;
+}
+function worstUtil(M,P){
+ let w=0;utilArr(M,P).forEach(u=>{w=Math.max(w,u.us,u.ut);});
+ return Math.max(w,S.dmax>0?deflection(M,P).dtip/S.dmax:9);
+}
+const sharesTo=R=>{const sh=S.links.slice(0,S.N).map(l=>Math.max(0.001,+l.share||0));
+ const tot=sh.reduce((a,b)=>a+b,0);return sh.map(s=>R*s/tot);};
+function solveReach(){
+ const f=R=>worstUtil(buildModel(sharesTo(R)),S.payload)-1;
+ if(f(5)>0)return{R:null,why:'infeasible'};
+ let lo=5,hi=5;let n=0;
+ while(f(hi)<0&&hi<30000&&n++<40)hi*=1.6;
+ if(f(hi)<0)return{R:hi,why:'capped'};
+ for(let i=0;i<80;i++){const md=(lo+hi)/2;f(md)<0?lo=md:hi=md;}
+ return{R:lo,why:'ok'};
+}
+function dynamics(M,P){
+ const al=(S.omega*Math.PI/180)/Math.max(0.01,S.ta),lk=S.links,out=[];
+ for(let i=0;i<M.N;i++){
+  let J=P*M.reach[i]**2;
+  for(let j=i;j<M.N;j++){
+   const dcg=M.reach[i]-M.reach[j]+M.L[j]/2, dl=M.reach[i]-M.reach[j]+M.L[j];
+   J+=M.m[j]*(M.L[j]**2/12+dcg*dcg)+(+lk[j].lump||0)*dl*dl;
+  }
+  J/=1e6;
+  const Tg=S.g*(P*M.reach[i]+M.sig[i])/1000, Ta=J*al;
+  out.push({J,Tg,Ta,Treq:Tg+Ta,avail:M.W[i]/1000,al});
+ }
+ return out;
+}
+const fn=(M,i)=>M.m[i]>0&&M.L[i]>0?(1/(2*Math.PI))*Math.sqrt(3*M.E[i]*1e6*M.I[i]*1e-12/(M.m[i]*(M.L[i]/1000)**3)):0;
+
+/* ============ UI BUILD ============ */
+const $=s=>document.querySelector(s);
+const fmt=(v,d=2)=>!isFinite(v)?'—':(Math.abs(v)>=1000?v.toFixed(0):v.toFixed(d));
+const uc=u=>u>0.9?'v-bd':u>0.6?'v-wn':'v-ok';
+const ucol=u=>u>0.9?'#f85149':u>0.6?'#d29922':'#3fb950';
+
+function nrow(scope,i,k,label,unit,min,max,step){
+ const v=scope==='g'?S[k]:S.links[i][k];
+ const at=scope==='g'?`data-g="${k}"`:`data-i="${i}" data-k="${k}"`;
+ return `<label class="nr"><span>${label}<em>${unit}</em></span>
+ <input type="range" ${at} min="${min}" max="${max}" step="${step}" value="${v}">
+ <input type="number" ${at} min="${min}" max="${max}" step="${step}" value="${v}"></label>`;
+}
+function selrow(i,k,label,opts){
+ return `<label class="nr full"><span>${label}</span>
+ <select data-i="${i}" data-k="${k}">${opts.map(o=>`<option${S.links[i][k]===o?' selected':''}>${o}</option>`).join('')}</select></label>`;
+}
+function buildGlobals(){
+ $('#globals').innerHTML=
+  `<label class="nr full"><span>Number of links / joints</span>
+   <select data-g="N">${[1,2,3,4,5,6].map(n=>`<option value="${n}"${S.N===n?' selected':''}>${n}</option>`).join('')}</select></label>`
+ +nrow('g',0,'payload','Payload at tip <b>(input in mode ②)</b>','kg',0,20,0.05)
+ +nrow('g',0,'fos','Factor of safety','–',1,6,0.1)
+ +nrow('g',0,'k','Print knockdown k','–',0.3,1,0.05)
+ +nrow('g',0,'kd','Dynamic amplification K<sub>d</sub>','–',1,2.5,0.05)
+ +nrow('g',0,'eta','Drivetrain efficiency η','–',0.5,1,0.05)
+ +nrow('g',0,'dmax','Max allowable tip deflection','mm',0.1,25,0.1)
+ +nrow('g',0,'g','Gravity g','m/s²',9,10,0.01)
+ +`<label class="nr full"><span>Droop exaggeration in diagram</span>
+   <select data-g="exag">${[1,5,10,25,50,100].map(n=>`<option value="${n}"${S.exag===n?' selected':''}>×${n}</option>`).join('')}</select></label>`;
+ $('#dyn').innerHTML=nrow('g',0,'omega','Target joint speed ω','°/s',10,360,10)
+  +nrow('g',0,'ta','Acceleration time t<sub>a</sub>','s',0.05,2,0.05);
+ $('#dynOn').checked=S.dyn;
+}
+function buildLinks(){
+ let h='';
+ for(let i=0;i<6;i++){
+  const o=S.links[i];
+  h+=`<div class="lc" id="card${i}">
+   <div class="lch"><b>Link ${i+1}<small>${i===0?' · base':''}</small></b><span class="lcl" id="len${i}"></span></div>
+   <div class="lcb"><div class="g">
+    ${selrow(i,'mat','Material',Object.keys(MATS))}
+    ${selrow(i,'sec','Cross-section',SECS)}
+    ${nrow('l',i,'L','Length L <b>(input in mode ①)</b>','mm',0,900,5)}
+    ${nrow('l',i,'share','Length share <b>(mode ②)</b>','–',0.1,3,0.05)}
+    ${nrow('l',i,'d1',ROUND(o.sec)?'Outside diameter D':'Width b','mm',4,140,1)}
+    ${nrow('l',i,'d2','Height h (bending plane)','mm',4,140,1)}
+    ${nrow('l',i,'t','Wall thickness t','mm',0,25,0.5)}
+    ${nrow('l',i,'lump','Lumped mass at distal end','kg',0,8,0.05)}
+    ${nrow('l',i,'tq','Motor peak torque','N·m',0.02,30,0.02)}
+    ${nrow('l',i,'gr','Gear ratio','：1',1,120,1)}
+   </div>
+   <div class="secbox"><svg id="sec${i}" viewBox="0 0 110 86"></svg><div id="cap${i}"></div></div>
+   </div></div>`;
+ }
+ $('#links').innerHTML=h;
+}
+
+/* ============ DRAWING ============ */
+function drawSections(M){
+ let maxD=1;
+ for(let i=0;i<S.N;i++){const o=S.links[i];maxD=Math.max(maxD,o.d1,RECT(o.sec)?o.d2:o.d1);}
+ const sc=62/maxD;
+ for(let i=0;i<S.N;i++){
+  const o=S.links[i],cx=55,cy=42;let g='';
+  const b=o.d1*sc,hh=(RECT(o.sec)?o.d2:o.d1)*sc,t=o.t*sc;
+  const st='fill:#1f6feb33;stroke:#58a6ff;stroke-width:1.6',ho='fill:#0d1117;stroke:#58a6ff;stroke-width:1.2';
+  if(ROUND(o.sec)){
+   g+=`<circle cx="${cx}" cy="${cy}" r="${b/2}" style="${st}"/>`;
+   if(HOLLOW(o.sec)&&b/2-t>0)g+=`<circle cx="${cx}" cy="${cy}" r="${b/2-t}" style="${ho}"/>`;
+  }else{
+   g+=`<rect x="${cx-b/2}" y="${cy-hh/2}" width="${b}" height="${hh}" rx="1.5" style="${st}"/>`;
+   if(HOLLOW(o.sec)&&b-2*t>0&&hh-2*t>0)
+    g+=`<rect x="${cx-b/2+t}" y="${cy-hh/2+t}" width="${b-2*t}" height="${hh-2*t}" rx="1" style="${ho}"/>`;
+  }
+  g+=`<line x1="18" y1="${cy}" x2="92" y2="${cy}" stroke="#8957e5" stroke-width=".8" stroke-dasharray="4 3"/>
+      <text x="96" y="${cy+3}" class="lbl" font-size="8">NA</text>`;
+  document.getElementById('sec'+i).innerHTML=g;
+  document.getElementById('cap'+i).innerHTML=
+   `I = ${M.I[i].toExponential(2)} mm⁴<br>Z = ${fmt(M.Z[i],0)} mm³<br>${fmt(M.m[i]*1000,0)} g`
+   +(M.bad[i]?'<br><span style="color:#f85149">wall too thick</span>':'');
+ }
+}
+function drawArm(M,P,def,u){
+ const N=M.N,R=M.reach[0],bx=78,by=140,avail=840;
+ const sc=R>0?avail/R:1, ex=+S.exag;
+ let g='';
+ // base
+ g+=`<rect x="${bx-30}" y="${by-58}" width="30" height="116" fill="#1c2330" stroke="#30363d"/>`;
+ for(let k=0;k<7;k++)g+=`<line x1="${bx-30}" y1="${by-54+k*18}" x2="${bx-42}" y2="${by-42+k*18}" stroke="#9aa7b4"/>`;
+ // undeflected axis + deflection budget line
+ g+=`<line x1="${bx}" y1="${by}" x2="${bx+R*sc}" y2="${by}" stroke="#30363d" stroke-width="1.5" stroke-dasharray="7 5"/>`;
+ const budY=by+S.dmax*sc*ex;
+ if(budY-by<170)g+=`<line x1="${bx}" y1="${budY}" x2="${bx+R*sc}" y2="${budY}" stroke="#8957e5" stroke-width="1" stroke-dasharray="3 4"/>
+  <text x="${bx+R*sc+6}" y="${budY+4}" class="lbl" fill="#8957e5">budget</text>`;
+ // links
+ let x=bx,y=by,sl=0;
+ const jx=[],jy=[];
+ for(let i=0;i<N;i++){
+  const Lp=M.L[i]*sc, s0=sl, s1=sl+def.th[i];
+  const yEnd=y+(sl*M.L[i]+def.de[i])*sc*ex, xEnd=x+Lp;
+  const c1x=x+Lp/3, c1y=y+(Lp/3)*s0*ex, c2x=xEnd-Lp/3, c2y=yEnd-(Lp/3)*s1*ex;
+  const th=Math.min(58,Math.max(4,M.h[i]*sc));
+  const col=ucol(Math.max(u[i].us,u[i].ut));
+  g+=`<path d="M${x},${y} C${c1x},${c1y} ${c2x},${c2y} ${xEnd},${yEnd}" fill="none"
+      stroke="${col}" stroke-width="${th}" stroke-linecap="round" opacity=".32"/>`;
+  g+=`<path d="M${x},${y} C${c1x},${c1y} ${c2x},${c2y} ${xEnd},${yEnd}" fill="none"
+      stroke="${col}" stroke-width="2.4"/>`;
+  if(Lp>58)g+=`<text x="${x+Lp/2}" y="${by-th/2-16}" text-anchor="middle" font-size="11">L${i+1} = ${fmt(M.L[i],0)} mm</text>
+   <text x="${x+Lp/2}" y="${by-th/2-4}" text-anchor="middle" class="lbl">${S.links[i].mat} · ${S.links[i].sec}</text>`;
+  jx.push(x);jy.push(y);
+  x=xEnd;y=yEnd;sl=s1;
+ }
+ // joints
+ for(let i=0;i<N;i++){
+  const r=Math.min(15,Math.max(7,5+Math.cbrt(Math.max(.02,S.links[i].tq*S.links[i].gr))*2));
+  g+=`<circle cx="${jx[i]}" cy="${jy[i]}" r="${r}" fill="#0d1117" stroke="#58a6ff" stroke-width="2.4"/>
+      <text x="${jx[i]}" y="${jy[i]+r+15}" text-anchor="middle" class="lbl">J${i+1}</text>`;
+ }
+ // payload
+ const pz=Math.min(34,10+Math.cbrt(Math.max(.01,P))*16);
+ g+=`<rect x="${x}" y="${y-pz/2}" width="${pz*1.3}" height="${pz}" rx="4" fill="#1f6feb33" stroke="#58a6ff" stroke-width="2"/>
+     <text x="${x+pz*0.65}" y="${y+pz/2+16}" text-anchor="middle" class="lbl">${fmt(P,2)} kg</text>`;
+ // droop arrow
+ if(y-by>3)g+=`<line x1="${x-14}" y1="${by}" x2="${x-14}" y2="${y}" stroke="#f85149" stroke-width="1.5" marker-end="url(#a1)"/>
+   <text x="${x-20}" y="${(by+y)/2}" text-anchor="end" fill="#f85149" font-size="11">δ ${fmt(def.dtip,2)} mm</text>`;
+ // reach dimension
+ g+=`<line x1="${bx}" y1="300" x2="${bx+R*sc}" y2="300" class="dim" marker-start="url(#a2)" marker-end="url(#a1b)"/>
+  <line x1="${bx}" y1="${by+20}" x2="${bx}" y2="300" class="dim"/>
+  <line x1="${bx+R*sc}" y1="${y+24}" x2="${bx+R*sc}" y2="300" class="dim"/>
+  <text x="${bx+R*sc/2}" y="294" text-anchor="middle" class="lbl">total reach ${fmt(R,0)} mm</text>`;
+ $('#arm').innerHTML=`<defs>
+  <marker id="a1" markerWidth="8" markerHeight="8" refX="4" refY="7" orient="auto"><path d="M0,0 L8,0 L4,8 z" fill="#f85149"/></marker>
+  <marker id="a1b" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#30363d"/></marker>
+  <marker id="a2" markerWidth="8" markerHeight="8" refX="1" refY="4" orient="auto"><path d="M8,0 L0,4 L8,8 z" fill="#30363d"/></marker>
+ </defs>`+g;
+ $('#armCap').textContent=`Worst-case pose, drawn to scale horizontally and in section height. Droop shown ×${S.exag} (true droop ${fmt(def.dtip,2)} mm). Link colour = worst of bending/torque utilisation.`;
+}
+
+/* ============ MAIN UPDATE ============ */
+function update(){
+ // lengths
+ let M,solved=null,note='';
+ if(S.mode==='load'){M=buildModel(S.links.slice(0,S.N).map(l=>Math.max(0,+l.L||0)));}
+ else{
+  solved=solveReach();
+  if(solved.R===null){note='infeasible';M=buildModel(sharesTo(40));}
+  else{M=buildModel(sharesTo(solved.R));if(solved.why==='capped')note='capped';}
+  for(let i=0;i<S.N;i++)S.links[i].L=M.L[i];
+ }
+ // payload in use
+ const sp=strengthPayload(M), dp=deflPayload(M);
+ const P=S.mode==='load'?Math.min(sp.p,dp):S.payload;
+ const u=utilArr(M,P), def=deflection(M,P), dyn=S.dyn?dynamics(M,P):null;
+ const wu=worstUtil(M,P);
+
+ // headers / labels
+ $('#chipN').textContent=S.N+(S.N===1?' link':' links');
+ for(let i=0;i<6;i++){
+  const c=document.getElementById('card'+i);
+  c.style.display=i<S.N?'':'none';
+  if(i<S.N){
+   const mx=Math.max(u[i].us,u[i].ut);
+   document.getElementById('len'+i).innerHTML=
+    `${fmt(M.L[i],0)} mm · <span class="${uc(mx)}">util ${fmt(mx,2)}</span>`;
+  }
+ }
+ // enable/disable by mode
+ document.querySelectorAll('[data-k="L"]').forEach(e=>e.disabled=S.mode!=='load');
+ document.querySelectorAll('[data-k="share"]').forEach(e=>e.disabled=S.mode!=='lengths');
+ document.querySelectorAll('[data-g="payload"]').forEach(e=>e.disabled=S.mode!=='lengths');
+ document.querySelectorAll('[data-k="d2"]').forEach((e,i)=>{});
+ for(let i=0;i<S.N;i++){
+  const isR=RECT(S.links[i].sec),isH=HOLLOW(S.links[i].sec);
+  document.querySelectorAll(`[data-i="${i}"][data-k="d2"]`).forEach(e=>e.disabled=!isR);
+  document.querySelectorAll(`[data-i="${i}"][data-k="t"]`).forEach(e=>e.disabled=!isH);
+ }
+ if(S.mode==='lengths')document.querySelectorAll('[data-k="L"]').forEach(e=>{
+  const i=+e.dataset.i;if(i<S.N)e.value=Math.round(M.L[i]);});
+
+ // KPIs
+ let kp='';
+ if(S.mode==='load'){
+  kp+=`<div class="kpi hero"><span>Practical payload</span><b>${fmt(P,2)} kg</b><i>lesser of the two below</i></div>
+   <div class="kpi"><span>Strength / torque limit</span><b class="${dp<sp.p?'':'v-wn'}">${fmt(sp.p,2)} kg</b><i>joint J${sp.idx+1} · ${M.V[sp.idx]<M.W[sp.idx]?'bending':'motor torque'}</i></div>
+   <div class="kpi"><span>Deflection limit</span><b class="${dp<sp.p?'v-wn':''}">${fmt(dp,2)} kg</b><i>at δ ≤ ${fmt(S.dmax,2)} mm</i></div>`;
+ }else{
+  kp+=`<div class="kpi hero"><span>Max total reach</span><b>${solved&&solved.R!==null?fmt(M.reach[0],0)+' mm':'—'}</b><i>for ${fmt(S.payload,2)} kg payload</i></div>`;
+  for(let i=0;i<S.N;i++)kp+=`<div class="kpi"><span>Max L${i+1}</span><b>${fmt(M.L[i],0)}<i> mm</i></b><i>share ${fmt(S.links[i].share,2)}</i></div>`;
+ }
+ kp+=`<div class="kpi"><span>Tip deflection</span><b class="${def.dtip>S.dmax?'v-bd':def.dtip>0.7*S.dmax?'v-wn':'v-ok'}">${fmt(def.dtip,2)}<i> mm</i></b><i>budget ${fmt(S.dmax,2)} mm</i></div>
+  <div class="kpi"><span>Arm mass</span><b>${fmt(M.mass,2)}<i> kg</i></b><i>ratio ${fmt(P/Math.max(1e-9,M.mass),2)}:1</i></div>
+  <div class="kpi"><span>Worst utilisation</span><b class="${uc(wu)}">${fmt(wu,2)}</b><i>1.00 = at the limit</i></div>
+  <div class="kpi"><span>Lowest natural freq.</span><b>${fmt(Math.min(...Array.from({length:S.N},(_,i)=>fn(M,i))),1)}<i> Hz</i></b><i>per-link estimate</i></div>`;
+ $('#kpis').innerHTML=kp;
+
+ // verdict
+ let v='',bindJ=0,bindMode='';
+ {let worst=-1;for(let i=0;i<S.N;i++){const mx=Math.max(u[i].us,u[i].ut);if(mx>worst){worst=mx;bindJ=i;}}
+  const dU=def.dtip/S.dmax;
+  bindMode=dU>=worst?'Deflection':(u[bindJ].us>u[bindJ].ut?'Material (bending)':'Motor torque');}
+ if(note==='infeasible')v=`<span class="chip bd">Infeasible</span> Even a minimal arm cannot carry ${fmt(S.payload,2)} kg with these sections and motors. Increase gearing, section height, or reduce the payload.`;
+ else if(note==='capped')v=`<span class="chip wn">Reach capped</span> No constraint binds below 30 m of reach — your inputs are likely unrealistic (check motor torque and section size).`;
+ else v=`<span class="chip ${wu>1.001?'bd':wu>0.9?'wn':'ok'}">${wu>1.001?'Over limit':'Within limits'}</span>
+  Governing constraint: <b>${bindMode}</b> at joint <b>J${bindJ+1}</b>. ${def.dtip>S.dmax?`<span class="v-bd">Deflection exceeds budget — stiffen or shorten.</span>`:''}`;
+ $('#verdict').innerHTML=v;
+
+ // table
+ let t=`<table><thead><tr><th>Joint</th><th>Bending util</th><th>Torque util</th>
+  <th>Demand<br>N·m</th><th>Bending cap<br>N·m</th><th>Motor cap<br>N·m</th><th>Payload limit<br>kg</th><th>δ local<br>mm</th><th>f<sub>n</sub><br>Hz</th>${S.dyn?'<th>T<sub>req</sub> dyn<br>N·m</th><th>Headroom</th>':''}<th>Binding</th></tr></thead><tbody>`;
+ for(let i=0;i<S.N;i++){
+  const pl=M.reach[i]>0?Math.max(0,(M.X[i]/(S.kd*S.g)-M.sig[i])/M.reach[i]):0;
+  const bar=(x)=>`<div class="bar"><i style="width:${Math.min(100,x*100)}%;background:${ucol(x)}"></i><span>${fmt(x,2)}</span></div>`;
+  t+=`<tr><td>J${i+1}</td><td>${bar(u[i].us)}</td><td>${bar(u[i].ut)}</td>
+   <td>${fmt(u[i].d/1000,2)}</td><td>${fmt(M.V[i]/1000,2)}</td><td>${fmt(M.W[i]/1000,2)}</td>
+   <td>${fmt(pl,2)}</td><td>${fmt(def.de[i],3)}</td><td>${fmt(fn(M,i),1)}</td>`;
+  if(S.dyn){const d=dyn[i];t+=`<td class="${d.Treq>d.avail?'v-bd':'v-ok'}">${fmt(d.Treq,2)}</td><td>${fmt(d.avail-d.Treq,2)}</td>`;}
+  t+=`<td>${M.V[i]<M.W[i]?'bending':'motor'}</td></tr>`;
+ }
+ $('#tbl').innerHTML=t+'</tbody></table>';
+
+ // advice
+ const a=[];
+ if(def.dtip>S.dmax)a.push(`<b>Deflection governs.</b> Bending stiffness scales with h³ — raising the height of link ${1+def.de.indexOf(Math.max(...def.de))} by 25% cuts its droop by about half. A hollow section of the same outside size is far more efficient than adding infill.`);
+ if(bindMode==='Motor torque')a.push(`<b>Joint J${bindJ+1} is torque-limited.</b> Going from ${S.links[bindJ].gr}:1 to ${Math.ceil(S.links[bindJ].gr*1.5)}:1 would raise capacity by ~50% — watch the speed penalty and backlash.`);
+ if(bindMode==='Material (bending)')a.push(`<b>Joint J${bindJ+1} is stress-limited.</b> Increase section height, switch to a tube, or move to a stiffer material; the motor has spare capacity (${fmt(M.W[bindJ]/1000,2)} N·m available vs ${fmt(u[bindJ].d/1000,2)} N·m demanded).`);
+ for(let i=0;i<S.N;i++){
+  if(M.bad[i])a.push(`<span class="v-bd">Link ${i+1}: wall thickness is ≥ half the section size — reduce t or treat it as solid.</span>`);
+  if(S.links[i].mat==='PLA')a.push(`Link ${i+1} is PLA (T<sub>g</sub> ≈ 55 °C) and <b>creeps under sustained load</b>. If a pose is held for minutes, derate to ~40% of yield or switch to PETG/ASA — especially next to a warm stepper.`);
+ }
+ const lowF=Math.min(...Array.from({length:S.N},(_,i)=>fn(M,i)));
+ if(lowF<15)a.push(`Lowest natural frequency is ${fmt(lowF,1)} Hz — keep commanded motion below about ${fmt(lowF/5,1)} Hz or you will fight oscillation in tuning.`);
+ if(P/Math.max(1e-9,M.mass)<0.15&&S.mode==='load')a.push(`Payload-to-arm ratio is only ${fmt(P/M.mass,2)}:1 — most of your torque is lifting the arm itself. Lighter distal links pay back twice over.`);
+ if(S.dyn){const bad=dyn.findIndex(d=>d.Treq>d.avail);
+  if(bad>=0)a.push(`<span class="v-bd">Dynamics: joint J${bad+1} needs ${fmt(dyn[bad].Treq,2)} N·m to accelerate at ${fmt(dyn[bad].al,1)} rad/s² but only ${fmt(dyn[bad].avail,2)} N·m is available.</span> Lengthen t<sub>a</sub> or lower ω.`);
+  else a.push(`Dynamics OK: all joints have torque headroom at ω = ${S.omega}°/s reached in ${S.ta} s. Also check <b>RMS</b> torque against the motor's continuous rating.`);}
+ a.push(`Not modelled here: torsion when the base slews, buckling of compression members, joint backlash and bearing play, fastener pull-out, and stress concentrations at the joints — which is where printed arms usually fail first.`);
+ $('#advice').innerHTML=a.map(x=>`<li>${x}</li>`).join('');
+
+ drawSections(M);
+ drawArm(M,P,def,u);
+ $('#modeHelp').innerHTML=S.mode==='load'
+  ? 'Link lengths are <b>inputs</b>; the payload limit is computed from bending stress, motor torque and deflection.'
+  : 'Payload is an <b>input</b>; link lengths are solved so the worst utilisation equals exactly 1.00. Set the proportional <b>shares</b> per link.';
+ $('#bLink').dataset.hash=encodeState();
+}
+
+/* ============ EVENTS ============ */
+function syncInputs(sel,val){document.querySelectorAll(sel).forEach(e=>{if(e.value!=val)e.value=val;});}
+document.addEventListener('input',e=>{
+ const t=e.target;
+ if(t.dataset.g!==undefined&&t.dataset.g!==''){
+  const k=t.dataset.g;let v=t.type==='number'||t.type==='range'?+t.value:t.value;
+  if(k==='N'||k==='exag')v=+v;
+  S[k]=v;syncInputs(`[data-g="${k}"]`,t.value);
+  if(k==='N'){update();return;}
+  update();return;
+ }
+ if(t.dataset.k!==undefined&&t.dataset.i!==undefined){
+  const i=+t.dataset.i,k=t.dataset.k;
+  S.links[i][k]=(t.tagName==='SELECT')?t.value:+t.value;
+  if(t.tagName!=='SELECT')syncInputs(`[data-i="${i}"][data-k="${k}"]`,t.value);
+  if(k==='sec'){buildLinks();attachNothing();}
+  update();return;
+ }
+});
+function attachNothing(){}
+$('#dynOn').addEventListener('change',e=>{S.dyn=e.target.checked;update();});
+$('#mLoad').onclick=()=>{S.mode='load';$('#mLoad').classList.add('on');$('#mLen').classList.remove('on');update();};
+$('#mLen').onclick=()=>{S.mode='lengths';$('#mLen').classList.add('on');$('#mLoad').classList.remove('on');update();};
+[1,2,3].forEach(n=>{$('#bPreset'+n).onclick=()=>{
+ const p=PRESETS[n],d=defaults();Object.assign(d,{N:p.N,fos:p.fos,k:p.k,kd:p.kd,eta:p.eta,dmax:p.dmax,mode:S.mode});
+ p.links.forEach((l,i)=>d.links[i]=Object.assign({},l,{share:[1,1,.6,.5,.4,.3][i]}));
+ S=d;buildGlobals();buildLinks();update();};});
+$('#bCsv').onclick=()=>{
+ const M=buildModel(S.links.slice(0,S.N).map(l=>+l.L||0));
+ const sp=strengthPayload(M),dp=deflPayload(M),P=S.mode==='load'?Math.min(sp.p,dp):S.payload;
+ const u=utilArr(M,P),def=deflection(M,P);
+ let r=[['Robot arm results'],['Mode',S.mode],['Payload used (kg)',P.toFixed(3)],
+  ['Total reach (mm)',M.reach[0].toFixed(1)],['Arm mass (kg)',M.mass.toFixed(3)],
+  ['Tip deflection (mm)',def.dtip.toFixed(3)],['Deflection budget (mm)',S.dmax],
+  ['FoS',S.fos],['k',S.k],['Kd',S.kd],['eta',S.eta],[],
+  ['Link','Length mm','Material','Section','D1','D2','t','Mass kg','I mm4','Z mm3','Demand Nm','Bend cap Nm','Motor cap Nm','Bend util','Torque util','Local defl mm']];
+ for(let i=0;i<S.N;i++){const o=S.links[i];
+  r.push([i+1,M.L[i].toFixed(1),o.mat,o.sec,o.d1,o.d2,o.t,M.m[i].toFixed(4),M.I[i].toFixed(0),M.Z[i].toFixed(1),
+   (u[i].d/1000).toFixed(3),(M.V[i]/1000).toFixed(3),(M.W[i]/1000).toFixed(3),u[i].us.toFixed(3),u[i].ut.toFixed(3),def.de[i].toFixed(4)]);}
+ const blob=new Blob([r.map(x=>x.join(',')).join('\n')],{type:'text/csv'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='robot-arm-results.csv';a.click();URL.revokeObjectURL(a.href);
+};
+function encodeState(){try{return btoa(unescape(encodeURIComponent(JSON.stringify(S))))}catch(e){return ''}}
+$('#bLink').onclick=()=>{
+ const h=location.origin+location.pathname+'#'+encodeState();
+ const done=()=>{$('#bLink').textContent='✓ Copied';setTimeout(()=>$('#bLink').textContent='🔗 Share',1500);};
+ if(navigator.clipboard&&window.isSecureContext)navigator.clipboard.writeText(h).then(done);
+ else{const ta=document.createElement('textarea');ta.value=h;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();done();}
+ location.hash=encodeState();
+};
+(function init(){
+ if(location.hash.length>4){try{
+  const o=JSON.parse(decodeURIComponent(escape(atob(location.hash.slice(1)))));
+  if(o&&o.links&&o.links.length===6)S=Object.assign(defaults(),o);
+ }catch(e){}}
+ buildGlobals();buildLinks();
+ if(S.mode==='lengths'){$('#mLen').classList.add('on');$('#mLoad').classList.remove('on');}
+ update();
+})();
+</script>
+</body>
+</html>
