@@ -3,12 +3,11 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="University project: design, calculation, manufacture and testing of a robotic gripper — background, calculations, mechanical concept and final product.">
+  <meta name="description" content="University mechatronics project: a lead-screw robotic gripper designed to hold an egg at 50 N minimum without crushing it — design decisions, force and speed calculations, PLA manufacture, testing and reflection.">
   <title>Robotic Gripper Project | Portfolio</title>
   <link rel="stylesheet" href="../assets/site.css">
 </head>
 <body>
-
 <nav class="nav" aria-label="Main">
   <div class="nav-in">
     <a class="brand" href="../index.html"><span class="mark">◆</span> Matthew Schembri</a>
@@ -19,144 +18,237 @@
     </ul>
   </div>
 </nav>
-
 <main class="narrow">
   <p class="eyebrow"><a href="../projects.html" style="color:inherit;text-decoration:none">Projects</a> → Project 01</p>
   <h1>Robotic Gripper — design, build &amp; test</h1>
-  <p class="lede">A university mechatronics project: design a gripper, ensure it meets gripping requirements, model it in SolidWorks, 3D print it, and demonstrate it picking up a real object gently. This page documents the engineering reasoning alongside a demonstration of its operation</p>
-
+  <p class="lede">Given a fixed kit of parts — a geared motor with encoder, a Sabertooth driver, a Sharp IR sensor, a load cell and amplifier, and a myRIO — our team had to build a gripper that could apply at least 50&nbsp;N, yet close on an egg without cracking it. This page is less a product brochure than a record of the decisions we made and why: linear actuation over rotational, a lead screw over a geared rack, PLA over tougher filaments, and force feedback over position control.</p>
   <dl class="meta">
-    <dt>Context</dt><dd> Mechatronic Design (MIET2585), 2026 Sem2</dd>
-    <dt>Role</dt><dd> mechanical design and CAD, Labview Programming, Assembly and electronics </dd>
-    <dt>Tools</dt><dd>SolidWorks · FDM 3D printing (Bambu) · NI Labview </dd>
+    <dt>Context</dt><dd>Mechatronic Design (MIET2585), 2026 Sem&nbsp;2</dd>
+    <dt>Role</dt><dd>Mechanical design and CAD, LabVIEW programming, assembly and electronics</dd>
+    <dt>Tools</dt><dd>SolidWorks · FDM 3D printing (Bambu, PLA) · NI&nbsp;myRIO + LabVIEW · Sabertooth motor driver · load cell</dd>
     <dt>Status</dt><dd><span class="chip ok">Built &amp; tested</span></dd>
-    <dt>Date</dt><dd> October 2026</dd>
+    <dt>Date</dt><dd>October 2026</dd>
   </dl>
+
+  <div class="panel note">
+    <h3>The numbers at a glance</h3>
+    <table class="spec-tbl">
+      <tbody>
+        <tr><td>Required grip force (brief)</td><td>≥ 50 N</td></tr>
+        <tr><td>Axial screw force available</td><td>175.9 N total · 88.0 N per finger</td></tr>
+        <tr><td>Delivered finger force</td><td>58.1 N closed → 78.5 N fully open</td></tr>
+        <tr><td>Maximum jaw opening</td><td>95 mm (47.5 mm per finger from centreline)</td></tr>
+        <tr><td>Lead-nut stroke</td><td>36.5 mm</td></tr>
+        <tr><td>Full close time</td><td>4.89 s at 7.47 mm/s</td></tr>
+        <tr><td>Transmission</td><td>8 mm lead single-start screw, η ≈ 0.28</td></tr>
+        <tr><td>Material</td><td>PLA, FDM printed</td></tr>
+      </tbody>
+    </table>
+  </div>
 
   <!-- ===================== TABS ===================== -->
   <div class="tabs" role="tablist" aria-label="Project sections">
-    <button role="tab" id="tab-background"  aria-controls="panel-background"  aria-selected="true">① Background knowledge</button>
+    <button role="tab" id="tab-brief"        aria-controls="panel-brief"        aria-selected="true">① Brief &amp; design decisions</button>
     <button role="tab" id="tab-calculations" aria-controls="panel-calculations" aria-selected="false">② Calculations</button>
-    <button role="tab" id="tab-concept"      aria-controls="panel-concept"      aria-selected="false">③ Mechanical concept</button>
-    <button role="tab" id="tab-final"        aria-controls="panel-final"        aria-selected="false">④ Final product</button>
+    <button role="tab" id="tab-design"       aria-controls="panel-design"       aria-selected="false">③ Design &amp; manufacture</button>
+    <button role="tab" id="tab-final"        aria-controls="panel-final"        aria-selected="false">④ Result &amp; what I learnt</button>
   </div>
 
-  <!-- ============ ① BACKGROUND ============ -->
-  <section class="tabpanel" role="tabpanel" id="panel-background" aria-labelledby="tab-background" tabindex="0">
-    <h2>What a gripper has to do</h2>
-    <p class="todo">TODO REVIEW Provided a motor with built in encoder, Sabertooth motor driver, a sharp IR sensor, Load Cell + Amplifier, and myRIO, we were to build a gripper capable of gripping with minimum 50N of force, such that an egg could be gripper but not crushed. Development included concept development, force analysis, design and CAD, electronic wiring + soldering, Calibration of sensors, logic testing, assembly and extensive testing. </p>
+  <!-- ============ ① BRIEF & DESIGN DECISIONS ============ -->
+  <section class="tabpanel" role="tabpanel" id="panel-brief" aria-labelledby="tab-brief" tabindex="0">
+    <h2>The brief</h2>
+    <p>We were handed the actuator and sensing hardware and asked to design everything around it: a gripper capable of applying a minimum of <strong>50 N</strong>, able to grip an egg firmly enough not to drop it but gently enough not to crush it. The work ran from concept sketches and force analysis through CAD, printing, wiring and soldering, sensor calibration, LabVIEW logic and testing.</p>
+    <p>What makes the brief interesting is that it sets a floor but not a ceiling. 50 N is the easy half — a screw drive clears it without trying. The hard half is the upper bound, which is set by the egg and is not a number we control, so the design had to be able to <em>stop</em> at a commanded force rather than simply reach one.</p>
 
-    <h3>Gripper classification</h3>
-    <p>Industrial grippers are usually grouped by how they hold the object, which frames the design choice before any dimensions are set:</p>
-    <ul>
-      <li><strong>Impactive</strong> — jaws clamp directly onto the object. Simple, tolerant, the common choice for printed prototypes.</li>
-      <li><strong>Ingressive</strong> — pins or needles penetrate the surface. Used for textiles and fibrous material.</li>
-      <li><strong>Astrictive</strong> — suction, magnetic or electrostatic attraction, with no enveloping jaws.</li>
-      <li><strong>Contigutive</strong> — direct contact adhesion, such as glue or freezing.</li>
-    </ul>
-    <p class="todo">TODO — state which class you chose and why, referencing the object's surface, rigidity and tolerance to clamping force.</p>
-
-    <h3>Mechanism options considered</h3>
+    <h3>Decision 1 — linear actuation, not rotational</h3>
+    <p>The first fork was how the fingers should move. We assessed three families against the egg rather than against a generic object:</p>
     <table class="spec-tbl">
-      <thead><tr><th>Mechanism</th><th>Behaviour</th><th>Why it was / wasn't chosen</th></tr></thead>
+      <thead><tr><th>Option</th><th>Motion at the jaw</th><th>Assessment</th></tr></thead>
       <tbody>
-        <tr><td>Parallel linkage</td><td>Jaws stay parallel through travel</td><td class="todo">TODO</td></tr>
-        <tr><td>Pivoting (scissor) jaws</td><td>Angular closure, simplest to print</td><td class="todo">TODO</td></tr>
-        <tr><td>Rack &amp; pinion</td><td>Linear, symmetric, good force transfer</td><td class="todo">TODO</td></tr>
-        <tr><td>Cam / worm drive</td><td>Self-locking, holds without power</td><td class="todo">TODO</td></tr>
+        <tr>
+          <td>Rotational (jaws pivot directly, scissor action)</td>
+          <td>Jaw tip sweeps an arc; the contact normal rotates as it closes</td>
+          <td>Fewest parts and the simplest to print, but the jaw face rolls across the shell as it closes. The contact force gains a tangential component that tends to squeeze the egg out of the jaws, and the effective moment arm — so the grip force — changes with opening.</td>
+        </tr>
+        <tr>
+          <td>Curvilinear (four-bar / parallel linkage)</td>
+          <td>Jaw stays roughly parallel, travelling along a shallow curve</td>
+          <td>Keeps the contact face flat, which is what the egg wants, but needs six or more printed pin joints. Each joint carries 0.2–0.3 mm of print clearance, so backlash and compliance stack up and the load-cell reading no longer corresponds cleanly to what the jaw is doing.</td>
+        </tr>
+        <tr>
+          <td><strong>Linear — lead screw and nut driving symmetric links (chosen)</strong></td>
+          <td>Both fingers translate in and out symmetrically about the centreline</td>
+          <td>The screw multiplies 0.8 N·m into 176 N of axial force with no gearbox, it is effectively non-back-driveable at 28% efficiency so the grip holds when the motor is unpowered, and the symmetry keeps the force model simple enough to verify by hand. The penalties are speed (4.89 s for a full close) and efficiency — most of the motor's work is lost to thread friction.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>Self-locking was the deciding factor. With a back-driveable transmission, the grip force depends on the motor continuing to hold a stall torque; with the screw, the force we set is the force that stays there, which turns "don't crush the egg" into a problem we solve once at the control layer rather than continuously.</p>
+
+    <h3>Decision 2 — transmission</h3>
+    <table class="spec-tbl">
+      <thead><tr><th>Transmission</th><th>Behaviour</th><th>Why it was / wasn't chosen</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Lead screw + lead nut (chosen)</strong></td><td>Large force multiplication, slow, self-locking</td><td>8 mm lead gave us the force margin and the holding behaviour we wanted from the supplied 0.8 N·m motor without adding a printed gear train.</td></tr>
+        <tr><td>Rack &amp; pinion</td><td>Linear, symmetric, fast</td><td>No force multiplication without a gearbox stage, and fully back-driveable — a power interruption releases the egg.</td></tr>
+        <tr><td>Spur gear train</td><td>Torque multiplication at the pivot</td><td>Printed teeth add backlash and wear on plastic flanks under sustained load; also still back-driveable.</td></tr>
+        <tr><td>Cam / eccentric</td><td>Self-locking, compact</td><td>Force-versus-angle curve is strongly non-linear and the profile is sensitive to print accuracy, which made the force model harder to trust than the screw's.</td></tr>
+        <tr><td>Belt or cable drive</td><td>Fast and light</td><td>Tension-only — it cannot push the jaws open — and it stretches, so commanded force drifts.</td></tr>
       </tbody>
     </table>
 
-    <h3>The gripper as a mechatronic system</h3>
-    <p>Treating it as a complete system rather than a mechanism keeps the interfaces honest: <strong>sensing</strong> (position, force or current feedback), <strong>actuation</strong> (motor, transmission, mechanism), <strong>control</strong> (open/closed loop, how grip force is commanded) and <strong>power</strong>.</p>
-    <p class="todo">TODO — a sentence on each for your build.</p>
+    <h3>Decision 3 — material: PLA</h3>
+    <p>Everything structural was printed in PLA on a Bambu FDM machine.</p>
+    <table class="spec-tbl">
+      <thead><tr><th>Material</th><th>In its favour</th><th>Against</th></tr></thead>
+      <tbody>
+        <tr><td><strong>PLA (chosen)</strong></td><td>Stiffest and most dimensionally accurate of the common filaments, which matters for the lead-nut bore and the pin-joint clearances; prints without an enclosure; cheap enough to iterate on.</td><td>Brittle, creeps under sustained load, and softens from around 55–60 °C.</td></tr>
+        <tr><td>PETG</td><td>Tougher, better heat resistance, fails ductile rather than shattering.</td><td>Stringier and less dimensionally stable on small features — worse for the threaded and pinned interfaces we depended on.</td></tr>
+        <tr><td>ABS / ASA</td><td>Higher service temperature, machinable.</td><td>Warps and delaminates without an enclosure; no reliable access to one.</td></tr>
+        <tr><td>Nylon</td><td>Tough, low friction — attractive for the nut itself.</td><td>Hygroscopic, expensive and needs drying; disproportionate for a one-semester build.</td></tr>
+      </tbody>
+    </table>
+    <p>PLA's weaknesses were real rather than theoretical, so we designed around them: parts oriented so bending load runs in-plane rather than across layer boundaries, four perimeters instead of dense infill, fillets at the finger root instead of sharp internal corners, generous clearance at the pin joints, and <span class="todo">TODO — heat-set inserts or captive nuts? state which you used</span> rather than threading into plastic. Creep was handled procedurally: the gripper holds for seconds in a demonstration, not hours, and <span class="todo">TODO — note anything you did about the motor sitting against a printed part</span>.</p>
 
-    <h3>Attaching the load to the motor shaft</h3>
-    <p>How torque actually crosses from shaft to mechanism determines whether the design survives: set screw onto a D-shaft or flat, keyed shaft, interference fit, clamp or split hub, or a moulded servo horn and spline. A printed hub on a smooth round shaft slips — the failure is invariably at this interface rather than in the structure.</p>
-    <p class="todo">TODO — the method you used and how it performed.</p>
-
-    <h3>Gearing</h3>
-    <p>Spur gearing trades speed for torque at the ratio: output torque multiplies while output speed divides, minus efficiency losses. The imperfections matter more than the ideal ratio in a printed assembly — <strong>backlash</strong> from layer resolution and clearance, tooth profile error, centre-distance error from print shrinkage, and wear on plastic flanks under load.</p>
-    <p class="todo">TODO — your ratio, module, tooth counts, and measured backlash if you took it.</p>
-
-    <h3>Designing for FDM printing</h3>
+    <h3>Decision 4 — force feedback, not position</h3>
+    <p>Treating the gripper as a mechatronic system rather than a mechanism is what kept the interfaces honest:</p>
     <ul>
-      <li>Orient parts so load runs <strong>in-plane</strong>, never across layer boundaries.</li>
-      <li>Perimeters carry bending load far more efficiently than infill — four walls beats dense infill per gram.</li>
-      <li>Allow clearance at moving joints (typically 0.2–0.4 mm) and plan for a reaming pass.</li>
-      <li>Avoid unsupported overhangs beyond ~45°; design fillets at stress risers rather than sharp internal corners.</li>
-      <li>Use heat-set inserts or captive nuts rather than threading directly into plastic.</li>
-      <li>PLA creeps under sustained load and softens near 55 °C — relevant if a motor sits against the part.</li>
+      <li><strong>Sensing</strong> — load cell and amplifier for grip force; the motor's encoder for jaw position and travel limits; Sharp IR sensor to detect that an object is actually present before closing.</li>
+      <li><strong>Actuation</strong> — supplied geared motor, 56 rpm at the screw, through the 8 mm lead screw and nut to the symmetric finger links.</li>
+      <li><strong>Control</strong> — myRIO running LabVIEW as a state machine: idle → object detected → close → hold at force setpoint → release. <span class="todo">TODO — say whether the force loop was bang-bang on a threshold or a PI controller, and what setpoint you settled on for the egg.</span></li>
+      <li><strong>Power</strong> — <span class="todo">TODO — supply voltage and current limit set on the Sabertooth.</span></li>
     </ul>
+    <p>Position control was never viable: an egg's diameter varies, and a commanded position that is correct for one egg crushes the next. Closing to a <em>force</em> makes the system indifferent to the object's size, which is why the load cell ended up being the most important part in the kit.</p>
+
+    <h3>Calibration</h3>
+    <p class="todo">TODO — load cell: calibrated against known masses, linear fit of amplifier output to newtons, tare procedure, and the residual you measured. IR sensor: the voltage–distance response is non-linear, so note whether you curve-fitted or used a lookup table, and over what range.</p>
 
     <h3>Safety</h3>
-    <p class="todo">TODO — workshop induction completed, PPE, pinch-point and stored-energy hazards in your mechanism, and how you mitigated them.</p>
+    <p class="todo">TODO — workshop induction, PPE, and the specific hazards of this mechanism: the pinch point between the fingers, the fact that a self-locking screw stores the grip force so the jaws stay loaded with the power off, and how you made that safe to handle.</p>
   </section>
 
   <!-- ============ ② CALCULATIONS ============ -->
   <section class="tabpanel" role="tabpanel" id="panel-calculations" aria-labelledby="tab-calculations" tabindex="0" hidden>
     <h2>Design calculations</h2>
-    <p>Each calculation below states the requirement, the working, and the design decision it drove.</p>
+    <p>Four questions had to be answered before anything was printed: how much force the screw can produce, how much of it survives the linkage, whether that is enough at the worst point in the travel, and how long a close takes.</p>
 
-    <h3>1 · Required grip force</h3>
-    <p>For a friction grip holding mass <em>m</em> between two jaws, with coefficient of friction <em>μ</em> and safety factor <em>n</em>:</p>
+    <h3>1 · Axial force from the lead screw</h3>
+    <p>For a power screw, the relationship between input torque <em>T</em>, lead <em>p</em> and axial force <em>F</em> at overall efficiency <em>η</em> is:</p>
     <div class="panel"><p style="font-family:var(--mono);font-size:.9rem;margin:0">
-      F<sub>grip</sub> ≥ n · m · g / (2 μ)
+      F<sub>screw</sub> = 2π · η · T / p<br>
+      F<sub>screw</sub> = 2π × 0.28 × 0.8 N·m / 0.008 m = <strong>175.9 N</strong>
     </p></div>
     <table class="spec-tbl">
       <thead><tr><th>Quantity</th><th>Value</th><th>Source / note</th></tr></thead>
       <tbody>
-        <tr><td>Object mass m</td><td class="todo">TODO kg</td><td>Measured</td></tr>
-        <tr><td>Friction coefficient μ</td><td class="todo">TODO</td><td>Jaw pad vs object material</td></tr>
-        <tr><td>Safety factor n</td><td class="todo">TODO</td><td>Covers acceleration and slip margin</td></tr>
-        <tr><td><strong>Required grip force</strong></td><td class="todo"><strong>TODO N</strong></td><td>Per jaw</td></tr>
+        <tr><td>Motor torque T</td><td>0.8 N·m</td><td>Supplied geared motor, rated output</td></tr>
+        <tr><td>Lead p</td><td>8 mm (0.008 m)</td><td>Single-start screw, one turn = 8 mm of travel</td></tr>
+        <tr><td>Screw efficiency η</td><td>0.28</td><td class="todo">TODO — state whether this came from the thread geometry and an assumed μ, or from a manufacturer figure</td></tr>
+        <tr><td>Total axial force</td><td><strong>175.9 N</strong></td><td>At the lead nut</td></tr>
+        <tr><td>Share per finger</td><td><strong>88.0 N</strong></td><td>Split equally between the two symmetric link pairs</td></tr>
       </tbody>
     </table>
-    <p class="todo">TODO — note whether acceleration during transfer was included, since snatching the object multiplies the required force.</p>
+    <p>The 28% efficiency is the price of self-locking: roughly three-quarters of the motor's work goes into thread friction, and that same friction is what stops the grip from being pushed open by the object.</p>
 
-    <h3>2 · Mechanism force transfer</h3>
-    <p class="todo">TODO — the relationship between actuator output and jaw force for your mechanism (lever ratio, rack radius or linkage geometry), and the mechanical advantage achieved.</p>
+    <h3>2 · Force transfer through the linkage</h3>
+    <p>The nut travels along the screw axis and drives each finger outward through a link, so the force delivered at the finger depends on the link angle and therefore on how far open the gripper is. Taking the fully closed position as the datum, the nut offset <em>x</em> is simply the finger's distance from the base offset of 30.27 mm, and a full 95 mm opening corresponds to 36.5 mm of nut travel.</p>
+    <div class="panel"><p style="font-family:var(--mono);font-size:.9rem;margin:0">
+      x = y − 30.27 mm &nbsp;&nbsp;(nut travel from closed)<br>
+      F<sub>finger</sub> = F<sub>screw per finger</sub> × k(x) &nbsp;&nbsp;(k = geometric transfer ratio)
+    </p></div>
+    <p>Evaluating the geometry across the stroke gives the force envelope below. The important result is counter-intuitive: the linkage is <strong>least</strong> efficient when the gripper is nearly closed — 58.1 N against 78.5 N wide open — and nearly closed is exactly where an egg is gripped. Sizing on the open-position figure would have left us 25% short of where it mattered.</p>
+    <table class="spec-tbl">
+      <thead><tr><th>Jaw opening (mm)</th><th>Per finger from centre (mm)</th><th>Nut travel x (mm)</th><th>Force per finger (N)</th></tr></thead>
+      <tbody>
+        <tr><td>95</td><td>47.5</td><td>36.50</td><td>78.46</td></tr>
+        <tr><td>75</td><td>37.5</td><td>27.81</td><td>74.59</td></tr>
+        <tr><td>50</td><td>25.0</td><td>17.77</td><td>68.26</td></tr>
+        <tr><td>25</td><td>12.5</td><td>8.53</td><td>62.98</td></tr>
+        <tr><td>0 (closed)</td><td>0</td><td>0</td><td><strong>58.06</strong></td></tr>
+      </tbody>
+    </table>
+    <details class="panel">
+      <summary>Full stroke table — all 20 steps</summary>
+      <table class="spec-tbl">
+        <thead><tr><th>Opening (mm)</th><th>Per finger (mm)</th><th>Finger y (mm)</th><th>Nut travel x (mm)</th><th>F per finger (N)</th><th>Step time (s)</th></tr></thead>
+        <tbody>
+          <tr><td>95</td><td>47.5</td><td>66.77</td><td>36.50</td><td>78.46</td><td>0.30</td></tr>
+          <tr><td>90</td><td>45.0</td><td>64.54</td><td>34.27</td><td>77.06</td><td>0.29</td></tr>
+          <tr><td>85</td><td>42.5</td><td>62.35</td><td>32.08</td><td>75.65</td><td>0.29</td></tr>
+          <tr><td>80</td><td>40.0</td><td>60.20</td><td>29.93</td><td>74.59</td><td>0.28</td></tr>
+          <tr><td>75</td><td>37.5</td><td>58.08</td><td>27.81</td><td>73.19</td><td>0.28</td></tr>
+          <tr><td>70</td><td>35.0</td><td>56.00</td><td>25.73</td><td>71.78</td><td>0.27</td></tr>
+          <tr><td>65</td><td>32.5</td><td>53.96</td><td>23.69</td><td>70.72</td><td>0.27</td></tr>
+          <tr><td>60</td><td>30.0</td><td>51.95</td><td>21.68</td><td>69.32</td><td>0.26</td></tr>
+          <tr><td>55</td><td>27.5</td><td>49.98</td><td>19.71</td><td>68.26</td><td>0.26</td></tr>
+          <tr><td>50</td><td>25.0</td><td>48.04</td><td>17.77</td><td>67.20</td><td>0.26</td></tr>
+          <tr><td>45</td><td>22.5</td><td>46.13</td><td>15.86</td><td>66.15</td><td>0.25</td></tr>
+          <tr><td>40</td><td>20.0</td><td>44.25</td><td>13.98</td><td>65.09</td><td>0.25</td></tr>
+          <tr><td>35</td><td>17.5</td><td>42.40</td><td>12.13</td><td>63.69</td><td>0.24</td></tr>
+          <tr><td>30</td><td>15.0</td><td>40.59</td><td>10.32</td><td>62.98</td><td>0.24</td></tr>
+          <tr><td>25</td><td>12.5</td><td>38.80</td><td>8.53</td><td>61.93</td><td>0.24</td></tr>
+          <tr><td>20</td><td>10.0</td><td>37.04</td><td>6.77</td><td>60.87</td><td>0.23</td></tr>
+          <tr><td>15</td><td>7.5</td><td>35.31</td><td>5.04</td><td>60.17</td><td>0.23</td></tr>
+          <tr><td>10</td><td>5.0</td><td>33.60</td><td>3.33</td><td>59.11</td><td>0.23</td></tr>
+          <tr><td>5</td><td>2.5</td><td>31.92</td><td>1.65</td><td>58.06</td><td>0.22</td></tr>
+          <tr><td>0</td><td>0</td><td>30.27</td><td>0</td><td>58.06</td><td>—</td></tr>
+        </tbody>
+        <tfoot><tr><td colspan="5">Total close time</td><td><strong>4.89 s</strong></td></tr></tfoot>
+      </table>
+      <p class="muted" style="font-size:.82rem">Step time is the time to traverse each 5 mm increment of jaw opening, which is not a constant distance at the nut — hence the taper from 0.30 s to 0.22 s.</p>
+    </details>
 
-    <h3>3 · Motor torque &amp; gear ratio</h3>
-    <p class="todo">TODO — required output torque, selected motor/servo and its rating, resulting ratio, and the speed consequence.</p>
+    <h3>3 · Does it meet the brief?</h3>
+    <div class="panel"><p style="font-family:var(--mono);font-size:.9rem;margin:0">
+      Worst case F<sub>finger</sub> = 58.06 N &nbsp; ≥ &nbsp; 50 N required<br>
+      Margin = 58.06 / 50 = <strong>1.16</strong>
+    </p></div>
+    <p>A 16% margin at the worst point in the stroke. Thin, but the slack sits in the right place: the efficiency figure of 0.28 is conservative, and the self-locking screw means we are not relying on the motor to sustain the load. <span class="todo">TODO — note the upper bound you worked to for the egg, and where that figure came from, since that is the constraint that actually governed the control setpoint.</span></p>
 
-    <h3>4 · Structural check</h3>
-    <p class="todo">TODO — bending stress in the jaw or finger at full grip force, against the allowable stress for your printed material with a knockdown factor applied.</p>
+    <h3>4 · Actuation speed</h3>
+    <div class="panel"><p style="font-family:var(--mono);font-size:.9rem;margin:0">
+      v = N · p / 60 = 56 rpm × 8 mm / 60 = <strong>7.47 mm/s</strong><br>
+      t<sub>close</sub> = 36.5 mm / 7.47 mm/s = <strong>4.89 s</strong>
+    </p></div>
+    <p>Nearly five seconds for a full close is slow, and it is the direct consequence of choosing force and self-locking over speed. In practice it mattered less than expected, because the IR sensor let us begin closing only when an object was in range rather than cycling the full stroke. <span class="todo">TODO — if you reduced the working stroke for the demonstration, say what it was and the resulting cycle time.</span></p>
+
+    <h3>5 · Structural check</h3>
+    <p class="todo">TODO — bending stress at the finger root under 78.5 N (the worst case for the structure, which is the opposite end of the stroke from the worst case for force), against PLA's allowable stress with a knockdown factor for layer adhesion and print orientation. Worth stating the section you used and the factor of safety you landed on.</p>
 
     <div class="panel note">
       <h3>Related tool I built</h3>
-      <p>Working through the actuator and structural sizing by hand for this project is what prompted me to build a general calculator for serial arms — it checks bending stress, actuator torque and deflection together and includes a servo database.</p>
+      <p>Doing this actuator and structural sizing by hand — and then redoing it every time the geometry changed — is what prompted me to build a general calculator for serial arms. It checks bending stress, actuator torque and deflection together and includes a servo database.</p>
       <div class="btn-row">
         <a class="btn prim" href="robot-arm.html">Robot arm calculator case study →</a>
         <a class="btn sm" href="../tools/armActuatorCalculation.html">Open the tool</a>
       </div>
     </div>
 
-    <h3>Calculation summary</h3>
+    <h3>Calculated versus measured</h3>
     <table class="spec-tbl">
       <thead><tr><th>Parameter</th><th>Calculated</th><th>As built / measured</th></tr></thead>
       <tbody>
-        <tr><td>Grip force</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
-        <tr><td>Jaw travel</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
-        <tr><td>Actuator torque</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
-        <tr><td>Gear ratio</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
-        <tr><td>Close time</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Grip force, closed</td><td>58.1 N per finger</td><td class="todo">TODO — from the load cell</td></tr>
+        <tr><td>Grip force, fully open</td><td>78.5 N per finger</td><td class="todo">TODO</td></tr>
+        <tr><td>Jaw opening</td><td>95 mm</td><td class="todo">TODO</td></tr>
+        <tr><td>Nut stroke</td><td>36.5 mm</td><td class="todo">TODO</td></tr>
+        <tr><td>Close time, full stroke</td><td>4.89 s</td><td class="todo">TODO</td></tr>
+        <tr><td>Screw efficiency</td><td>0.28 assumed</td><td class="todo">TODO — back-calculate from measured force if you have it</td></tr>
         <tr><td>Total mass</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
       </tbody>
     </table>
-    <p class="todo">TODO — comment on any discrepancy between calculated and measured, and what it tells you about the assumptions.</p>
+    <p class="todo">TODO — the interesting comparison is measured force against the 0.28 efficiency assumption, since that single number carries most of the uncertainty in the whole model. Comment on which direction it erred and why.</p>
   </section>
 
-  <!-- ============ ③ MECHANICAL CONCEPT ============ -->
-  <section class="tabpanel" role="tabpanel" id="panel-concept" aria-labelledby="tab-concept" tabindex="0" hidden>
-    <h2>Concept development</h2>
-    <p class="todo">TODO — how the design evolved from sketch to final CAD, and what each iteration fixed.</p>
+  <!-- ============ ③ DESIGN & MANUFACTURE ============ -->
+  <section class="tabpanel" role="tabpanel" id="panel-design" aria-labelledby="tab-design" tabindex="0" hidden>
+    <h2>From sketch to printed part</h2>
+    <p class="todo">TODO — a short paragraph on how the design evolved and what each iteration fixed. The useful version of this is problem-driven: what failed or didn't fit, and what changed as a result.</p>
 
-    <h3>Concept sketches &amp; iterations</h3>
+    <h3>Concept iterations</h3>
     <div class="media-grid">
       <figure>
         <img src="../assets/media/gripper/concept-01.jpg" alt="Initial hand sketch of the gripper mechanism" loading="lazy"
-             data-cap="Concept 1 — TODO describe the arrangement and its problem.">
+             data-cap="Concept 1 — TODO the arrangement and the problem with it.">
         <figcaption>Concept 1 — <span class="todo">TODO</span></figcaption>
       </figure>
       <figure>
@@ -172,7 +264,7 @@
     </div>
 
     <h3>CAD model</h3>
-    <p class="todo">TODO — modelling approach: base sketch, extrusions, features, hole wizard for fasteners, fillets, then assembly with mates. Note any design-for-print decisions visible in the model.</p>
+    <p class="todo">TODO — modelling approach and, more usefully, the design-for-print decisions visible in the model: print orientation of the fingers, the fillet at the finger root, clearance at the pin joints, how the lead nut is captured, and how the load cell is mounted in the force path.</p>
     <div class="media-grid wide">
       <figure>
         <img src="../assets/media/gripper/cad-assembly.jpg" alt="SolidWorks assembly of the gripper" loading="lazy"
@@ -180,9 +272,9 @@
         <figcaption>Full assembly in SolidWorks</figcaption>
       </figure>
       <figure>
-        <img src="../assets/media/gripper/cad-jaw.jpg" alt="SolidWorks part model of a gripper jaw" loading="lazy"
-             data-cap="Jaw part — TODO note the fillet at the root and the print orientation chosen.">
-        <figcaption>Jaw part detail</figcaption>
+        <img src="../assets/media/gripper/cad-jaw.jpg" alt="SolidWorks part model of a gripper finger" loading="lazy"
+             data-cap="Finger part — TODO the fillet at the root and the print orientation chosen.">
+        <figcaption>Finger part detail</figcaption>
       </figure>
       <figure>
         <img src="../assets/media/gripper/cad-exploded.jpg" alt="Exploded view of the gripper assembly" loading="lazy"
@@ -192,17 +284,17 @@
     </div>
 
     <h3>Mechanism demonstration</h3>
-    <p>A short motion study showing the jaws travelling through their full range before any part was printed.</p>
+    <p>A motion study run before anything was printed, to confirm the fingers reached the full 95 mm opening within the 36.5 mm of available nut travel without the links fouling the frame.</p>
     <figure class="videowrap">
       <video controls preload="metadata" poster="../assets/media/gripper/motion-poster.jpg">
         <source src="../assets/media/gripper/motion-study.mp4" type="video/mp4">
         Your browser cannot play this video. <a href="../assets/media/gripper/motion-study.mp4">Download it instead</a>.
       </video>
-      <figcaption>SolidWorks motion study — <span class="todo">TODO what it verified (travel, interference, over-centre behaviour)</span>.</figcaption>
+      <figcaption>SolidWorks motion study — <span class="todo">TODO what it verified, and whether it caught any interference you then fixed</span>.</figcaption>
     </figure>
 
-    <h3>Manufacture</h3>
-    <p class="todo">TODO — print settings (material, layer height, perimeters, infill, orientation, supports), post-processing, and anything that needed reprinting.</p>
+    <h3>Manufacture in PLA</h3>
+    <p class="todo">TODO — print settings: layer height, perimeter count, infill, orientation per part, supports. Then the parts that needed reprinting and why — that is the part a reader learns from.</p>
     <div class="media-grid">
       <figure>
         <img src="../assets/media/gripper/build-01.jpg" alt="Parts fresh off the printer" loading="lazy"
@@ -211,16 +303,18 @@
       </figure>
       <figure>
         <img src="../assets/media/gripper/build-02.jpg" alt="Gripper during assembly" loading="lazy"
-             data-cap="Assembly — TODO note the fastener and insert approach.">
+             data-cap="Assembly — TODO fasteners, inserts and how the lead nut was captured.">
         <figcaption>Assembly</figcaption>
       </figure>
     </div>
+
+    <h3>Electronics and LabVIEW</h3>
+    <p class="todo">TODO — wiring and soldering of the motor, Sabertooth, load cell amplifier and IR sensor to the myRIO; then the LabVIEW architecture (state machine, loop rate, any filtering on the load cell signal) and the bugs that took longest to find.</p>
   </section>
 
-  <!-- ============ ④ FINAL PRODUCT ============ -->
+  <!-- ============ ④ RESULT & WHAT I LEARNT ============ -->
   <section class="tabpanel" role="tabpanel" id="panel-final" aria-labelledby="tab-final" tabindex="0" hidden>
     <h2>The working gripper</h2>
-
     <figure class="videowrap">
       <iframe
         src="https://www.youtube-nocookie.com/embed/a9BQYK6pkYU"
@@ -229,24 +323,24 @@
         referrerpolicy="strict-origin-when-cross-origin"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
         allowfullscreen></iframe>
-      <figcaption><strong>Demonstration</strong> — <span class="todo">TODO what is happening: object, mass, cycle, and the result</span>.</figcaption>
+      <figcaption><strong>Demonstration</strong> — <span class="todo">TODO what is happening: the object, the force setpoint, the cycle and the result</span>.</figcaption>
     </figure>
 
     <h3>Finished build</h3>
     <div class="media-grid wide">
       <figure>
-        <img src="../assets/media/gripper/final-01.jpg" alt="Completed gripper, open" loading="lazy"
-             data-cap="Completed gripper, jaws open.">
+        <img src="../assets/media/gripper/final-01.jpg" alt="Completed gripper, jaws open" loading="lazy"
+             data-cap="Completed gripper at full 95 mm opening.">
         <figcaption>Jaws open</figcaption>
       </figure>
       <figure>
-        <img src="../assets/media/gripper/final-02.jpg" alt="Completed gripper holding the object" loading="lazy"
-             data-cap="Holding the test object at full grip force.">
-        <figcaption>Holding the test object</figcaption>
+        <img src="../assets/media/gripper/final-02.jpg" alt="Completed gripper holding an egg" loading="lazy"
+             data-cap="Holding the egg at the commanded force.">
+        <figcaption>Holding the egg</figcaption>
       </figure>
       <figure>
-        <img src="../assets/media/gripper/final-03.jpg" alt="Gripper mounted on the arm" loading="lazy"
-             data-cap="Mounted on the arm — TODO interface detail.">
+        <img src="../assets/media/gripper/final-03.jpg" alt="Gripper mounted on the test rig" loading="lazy"
+             data-cap="Mounted — TODO interface detail.">
         <figcaption>Mounted</figcaption>
       </figure>
     </div>
@@ -255,18 +349,29 @@
     <table class="spec-tbl">
       <thead><tr><th>Test</th><th>Target</th><th>Result</th><th>Pass</th></tr></thead>
       <tbody>
-        <tr><td>Lift test object without slip</td><td class="todo">TODO</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
-        <tr><td>Repeated pick-and-place cycles</td><td class="todo">TODO</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
-        <tr><td>Maximum object mass before slip</td><td class="todo">TODO</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
-        <tr><td>Jaw travel / opening</td><td class="todo">TODO</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Maximum grip force</td><td>≥ 50 N</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Grip and lift an egg without cracking</td><td>No shell damage</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Repeated pick-and-place cycles</td><td class="todo">TODO cycles</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Hold with motor unpowered</td><td>No slip or release</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Jaw opening</td><td>95 mm</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
+        <tr><td>Close time, full stroke</td><td>4.89 s</td><td class="todo">TODO</td><td class="todo">TODO</td></tr>
       </tbody>
     </table>
 
-    <h3>Reflection</h3>
+    <h3>What I learnt</h3>
     <div class="panel note">
-      <p><strong>What worked.</strong> <span class="todo">TODO</span></p>
-      <p><strong>What I would change.</strong> <span class="todo">TODO — be specific: a dimension, a material, a mechanism choice.</span></p>
-      <p><strong>What the discrepancies taught me.</strong> <span class="todo">TODO — where calculation and reality diverged, and the assumption responsible.</span></p>
+      <p><strong>A factor of safety is only as good as the point you evaluate it at.</strong> The linkage delivers 78 N wide open and 58 N closed, and the closed figure is the one that matters because that is where the egg is. Checking the convenient operating point rather than the governing one would have given a comfortable-looking 1.57 margin instead of the real 1.16.</p>
+      <p><strong>Efficiency carries most of the uncertainty.</strong> Every other input to the force calculation — torque, lead, geometry — is known to two or three figures. The 0.28 screw efficiency is an estimate, and it moves the answer more than everything else combined. That reframed what "verify by test" meant: the load cell was really measuring that one assumption.</p>
+      <p><strong>Choosing an inefficient transmission on purpose.</strong> Losing three-quarters of the motor's work to thread friction looks like bad engineering until the requirement is "hold an egg without crushing it when the power cuts". The loss and the self-locking are the same physical effect, so it was a choice rather than a compromise.</p>
+      <p><strong>Sense the quantity that is actually constrained.</strong> Position control fails on eggs because eggs are not all the same size. Closing to a force makes the controller indifferent to the object, which is a general lesson about measuring the constrained variable rather than a convenient proxy for it.</p>
+      <p><strong>Printed clearance is a design input, not a tolerance to be minimised.</strong> <span class="todo">TODO — expand with what you actually measured at the pin joints and how it affected backlash or the force reading.</span></p>
+      <p><strong>Calculation to CAD is not one-directional.</strong> <span class="todo">TODO — a sentence on how a geometry change in SolidWorks sent you back to the spreadsheet, which is what eventually became the arm calculator tool.</span></p>
+    </div>
+
+    <h3>What I would change</h3>
+    <div class="panel note">
+      <p><strong>Specifically.</strong> <span class="todo">TODO — a dimension, a material or a mechanism choice, not a generality. For example: whether a shorter base offset than 30.27 mm would flatten the force curve across the stroke.</span></p>
+      <p><strong>Where calculation and reality diverged.</strong> <span class="todo">TODO — the measurement that surprised you and the assumption responsible for it.</span></p>
     </div>
 
     <h3>Downloads</h3>
@@ -283,21 +388,17 @@
     <a class="btn prim" href="robot-arm.html">Next: Robot arm calculator →</a>
   </div>
 </main>
-
 <!-- lightbox -->
 <div id="lb" role="dialog" aria-modal="true" aria-label="Enlarged image">
   <button type="button" aria-label="Close">✕ Close</button>
   <div><img alt=""><p></p></div>
 </div>
-
 <footer class="site"><div>
   <span>© <span id="yr"></span> Matthew Schembri</span>
   <span><a href="../index.html">Home</a> · <a href="../tools.html">Tools</a> · <a href="../projects.html">Projects</a></span>
 </div></footer>
-
 <script>
 document.getElementById('yr').textContent=new Date().getFullYear();
-
 /* ---- tabs with shareable URLs ---- */
 const tabs=[...document.querySelectorAll('[role="tab"]')];
 function show(name,push){
@@ -323,9 +424,8 @@ tabs.forEach((t,i)=>{
     n.focus();show(n.id.slice(4),true);
   });
 });
-show(location.hash.slice(1)||'background',false);
+show(location.hash.slice(1)||'brief',false);
 window.addEventListener('hashchange',()=>show(location.hash.slice(1),false));
-
 /* ---- lightbox ---- */
 const lb=document.getElementById('lb'),lbImg=lb.querySelector('img'),lbCap=lb.querySelector('p');
 document.addEventListener('click',e=>{
